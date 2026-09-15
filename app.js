@@ -1,5 +1,5 @@
 /* =========================================================================
-   Cáritas — camada de simulação de aplicação (protótipo sem backend)
+   Apoia+ — camada de simulação de aplicação (protótipo sem backend)
    -------------------------------------------------------------------------
    Este arquivo concentra toda a "lógica de app" usando localStorage no
    navegador. Serve para o protótipo parecer e se comportar como um site
@@ -17,6 +17,8 @@ const CARITAS = {
   KEY_APPOINTMENTS: 'caritas_appointments',
   KEY_NOTIF_READ: 'caritas_notif_read',
   KEY_NOTIF_DYNAMIC: 'caritas_notif_dynamic',
+  KEY_ORGANIZATIONS: 'caritas_organizations',
+  KEY_PARTICIPANTS: 'caritas_participants',
 
   /* ---------------- catálogo de cursos (viraria GET /api/cursos) ---------------- */
   courses: {
@@ -102,10 +104,44 @@ const CARITAS = {
     return list;
   },
 
+  /* ---------------- organizações (viraria POST/GET /api/organizacoes) ---------------- */
+  getOrganizations(){ try{ return JSON.parse(localStorage.getItem(this.KEY_ORGANIZATIONS)) || []; }catch(e){ return []; } },
+  registerOrganization(data){
+    const list = this.getOrganizations();
+    const org = Object.assign({
+      id: 'org' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      status: 'pendente',
+      createdAt: new Date().toISOString()
+    }, data);
+    list.push(org);
+    localStorage.setItem(this.KEY_ORGANIZATIONS, JSON.stringify(list));
+    this.pushNotification('Cadastro enviado', `A organização "${data.nome}" foi enviada para análise.`);
+    return org;
+  },
+  setOrganizationStatus(id, status){
+    const list = this.getOrganizations();
+    const org = list.find(o => o.id === id);
+    if(org){ org.status = status; localStorage.setItem(this.KEY_ORGANIZATIONS, JSON.stringify(list)); }
+    return org;
+  },
+
+  /* ---------------- participantes (viraria GET /api/participantes) ---------------- */
+  getParticipants(){ try{ return JSON.parse(localStorage.getItem(this.KEY_PARTICIPANTS)) || []; }catch(e){ return []; } },
+  registerParticipant(data){
+    const list = this.getParticipants();
+    const p = Object.assign({
+      id: 'p' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      createdAt: new Date().toISOString()
+    }, data);
+    list.push(p);
+    localStorage.setItem(this.KEY_PARTICIPANTS, JSON.stringify(list));
+    return p;
+  },
+
   /* ---------------- notificações (viraria GET /api/notificacoes) ---------------- */
   baseNotifications(){
     return [
-      { id:'n1', title:'Bem-vindo(a) à Cáritas', body:'Complete seu cadastro para ver recomendações personalizadas de cursos.', date:'2026-09-10' },
+      { id:'n1', title:'Bem-vindo(a) à Apoia+', body:'Complete seu cadastro para ver recomendações personalizadas de cursos.', date:'2026-09-10' },
       { id:'n2', title:'Novo curso disponível', body:'Informática Avançada já está com inscrições abertas.', date:'2026-09-12' },
       { id:'n3', title:'Atendimento amanhã', body:'Você tem um atendimento agendado para amanhã às 15:30.', date:'2026-09-14' }
     ];
@@ -245,7 +281,7 @@ const CARITAS = {
       label_nome_completo:'Nome completo', label_nascimento:'Data de nascimento', label_telefone:'Telefone / WhatsApp', label_email:'E-mail',
       label_pais:'País de origem', label_idioma:'Idioma preferido', label_cidade:'Cidade atual', label_sobre:'Sobre você',
       sobre_placeholder:'Conte um pouco sobre você, seus interesses e objetivos',
-      termos_consent:'Li e aceito os Termos de Uso e a Política de Privacidade, e consinto com o tratamento dos meus dados (LGPD/RGPD).',
+      termos_consent:'Li e aceito os Termos de Uso e a Política de Privacidade, e consinto com o tratamento dos meus dados conforme o RGPD e a LOPDGDD (legislação espanhola de proteção de dados).',
       btn_cancelar:'Cancelar', btn_continuar:'Continuar',
 
       catalogo_eyebrow:'Catálogo', catalogo_sub:'Encontre um curso gratuito para desenvolver novas competências.',
@@ -271,7 +307,7 @@ const CARITAS = {
 
       org_eyebrow:'Para empresas e entidades', org_title:'Sua organização também pode participar.',
       org_desc:'Cadastre sua empresa, ONG ou entidade parceira, publique cursos e oportunidades, e acompanhe participantes em um só lugar.',
-      org_panel_title:'Painel da organização', org_panel_name:'Cáritas Formação Profissional', org_panel_stats:'4 cursos ativos · 128 inscritos',
+      org_panel_title:'Painel da organização', org_panel_name:'Apoia+ Formação Profissional', org_panel_stats:'4 cursos ativos · 128 inscritos',
       org_verified:'Perfil verificado', org_verified_sub:'Documentação completa',
       org_feat1_title:'Publique cursos', org_feat1_desc:'Anuncie cursos, formações e oportunidades para a comunidade atendida.',
       org_feat2_title:'Gerencie inscritos', org_feat2_desc:'Acompanhe quem se inscreveu e o progresso de cada participante.',
@@ -327,7 +363,7 @@ const CARITAS = {
       label_nome_completo:'Nombre completo', label_nascimento:'Fecha de nacimiento', label_telefone:'Teléfono / WhatsApp', label_email:'Correo electrónico',
       label_pais:'País de origen', label_idioma:'Idioma preferido', label_cidade:'Ciudad actual', label_sobre:'Sobre ti',
       sobre_placeholder:'Cuéntanos un poco sobre ti, tus intereses y objetivos',
-      termos_consent:'He leído y acepto los Términos de Uso y la Política de Privacidad, y consiento el tratamiento de mis datos (LGPD/RGPD).',
+      termos_consent:'He leído y acepto los Términos de Uso y la Política de Privacidad, y consiento el tratamiento de mis datos conforme al RGPD y a la LOPDGDD (Ley Orgánica de Protección de Datos de España).',
       btn_cancelar:'Cancelar', btn_continuar:'Continuar',
 
       catalogo_eyebrow:'Catálogo', catalogo_sub:'Encuentra un curso gratuito para desarrollar nuevas competencias.',
@@ -353,7 +389,7 @@ const CARITAS = {
 
       org_eyebrow:'Para empresas y entidades', org_title:'Tu organización también puede participar.',
       org_desc:'Registra tu empresa, ONG o entidad asociada, publica cursos y oportunidades, y da seguimiento a los participantes en un solo lugar.',
-      org_panel_title:'Panel de la organización', org_panel_name:'Cáritas Formación Profesional', org_panel_stats:'4 cursos activos · 128 inscritos',
+      org_panel_title:'Panel de la organización', org_panel_name:'Apoia+ Formación Profesional', org_panel_stats:'4 cursos activos · 128 inscritos',
       org_verified:'Perfil verificado', org_verified_sub:'Documentación completa',
       org_feat1_title:'Publica cursos', org_feat1_desc:'Anuncia cursos, formaciones y oportunidades para la comunidad atendida.',
       org_feat2_title:'Gestiona inscritos', org_feat2_desc:'Da seguimiento a quién se inscribió y al progreso de cada participante.',
@@ -409,7 +445,7 @@ const CARITAS = {
       label_nome_completo:'Full name', label_nascimento:'Date of birth', label_telefone:'Phone / WhatsApp', label_email:'Email',
       label_pais:'Country of origin', label_idioma:'Preferred language', label_cidade:'Current city', label_sobre:'About you',
       sobre_placeholder:'Tell us a bit about yourself, your interests and goals',
-      termos_consent:'I have read and accept the Terms of Use and Privacy Policy, and consent to the processing of my data (GDPR).',
+      termos_consent:"I have read and accept the Terms of Use and Privacy Policy, and consent to the processing of my data under the GDPR and Spain's LOPDGDD.",
       btn_cancelar:'Cancel', btn_continuar:'Continue',
 
       catalogo_eyebrow:'Catalog', catalogo_sub:'Find a free course to build new skills.',
@@ -435,7 +471,7 @@ const CARITAS = {
 
       org_eyebrow:'For companies and organizations', org_title:'Your organization can join too.',
       org_desc:'Register your company, NGO or partner entity, publish courses and opportunities, and track participants in one place.',
-      org_panel_title:'Organization dashboard', org_panel_name:'Cáritas Vocational Training', org_panel_stats:'4 active courses · 128 enrolled',
+      org_panel_title:'Organization dashboard', org_panel_name:'Apoia+ Vocational Training', org_panel_stats:'4 active courses · 128 enrolled',
       org_verified:'Verified profile', org_verified_sub:'Documentation complete',
       org_feat1_title:'Publish courses', org_feat1_desc:'Advertise courses, training and opportunities to the community you serve.',
       org_feat2_title:'Manage enrollees', org_feat2_desc:'Track who enrolled and each participant\'s progress.',
@@ -491,7 +527,7 @@ const CARITAS = {
       label_nome_completo:'Nom complet', label_nascimento:'Date de naissance', label_telefone:'Téléphone / WhatsApp', label_email:'E-mail',
       label_pais:"Pays d'origine", label_idioma:'Langue préférée', label_cidade:'Ville actuelle', label_sobre:'À propos de vous',
       sobre_placeholder:'Parlez-nous un peu de vous, de vos intérêts et de vos objectifs',
-      termos_consent:"J'ai lu et j'accepte les Conditions d'utilisation et la Politique de confidentialité, et je consens au traitement de mes données (RGPD).",
+      termos_consent:"J'ai lu et j'accepte les Conditions d'utilisation et la Politique de confidentialité, et je consens au traitement de mes données conformément au RGPD et à la LOPDGDD (loi espagnole sur la protection des données).",
       btn_cancelar:'Annuler', btn_continuar:'Continuer',
 
       catalogo_eyebrow:'Catalogue', catalogo_sub:'Trouvez un cours gratuit pour développer de nouvelles compétences.',
@@ -517,7 +553,7 @@ const CARITAS = {
 
       org_eyebrow:'Pour les entreprises et organisations', org_title:'Votre organisation peut aussi participer.',
       org_desc:'Inscrivez votre entreprise, ONG ou entité partenaire, publiez cours et opportunités, et suivez les participants en un seul endroit.',
-      org_panel_title:"Tableau de bord de l'organisation", org_panel_name:'Cáritas Formation Professionnelle', org_panel_stats:'4 cours actifs · 128 inscrits',
+      org_panel_title:"Tableau de bord de l'organisation", org_panel_name:'Apoia+ Formation Professionnelle', org_panel_stats:'4 cours actifs · 128 inscrits',
       org_verified:'Profil vérifié', org_verified_sub:'Documentation complète',
       org_feat1_title:'Publier des cours', org_feat1_desc:'Annoncez cours, formations et opportunités à la communauté servie.',
       org_feat2_title:'Gérer les inscrits', org_feat2_desc:'Suivez qui s\'est inscrit et la progression de chaque participant.',
@@ -573,7 +609,7 @@ const CARITAS = {
       label_nome_completo:'الاسم الكامل', label_nascimento:'تاريخ الميلاد', label_telefone:'الهاتف / واتساب', label_email:'البريد الإلكتروني',
       label_pais:'بلد المنشأ', label_idioma:'اللغة المفضلة', label_cidade:'المدينة الحالية', label_sobre:'نبذة عنك',
       sobre_placeholder:'أخبرنا قليلاً عن نفسك واهتماماتك وأهدافك',
-      termos_consent:'لقد قرأت ووافقت على شروط الاستخدام وسياسة الخصوصية، وأوافق على معالجة بياناتي.',
+      termos_consent:'لقد قرأت ووافقت على شروط الاستخدام وسياسة الخصوصية، وأوافق على معالجة بياناتي وفقًا للائحة العامة لحماية البيانات (RGPD) وقانون LOPDGDD الإسباني.',
       btn_cancelar:'إلغاء', btn_continuar:'متابعة',
 
       catalogo_eyebrow:'الكتالوج', catalogo_sub:'ابحث عن دورة مجانية لتطوير مهارات جديدة.',

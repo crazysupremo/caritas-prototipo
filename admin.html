@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel administrativo — Apoia+</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">APOIA+<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html">Início</a>
+<a href="cursos.html">Cursos</a>
+<a href="organizacao.html">Organizações</a>
+<a href="admin.html" class="active">Admin</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div id="gate" class="authwrap">
+<div class="authbox">
+<div class="eyebrow">Acesso restrito</div>
+<h1>Painel administrativo</h1>
+<p class="sub">Entre para gerenciar organizações, participantes e cursos.</p>
+<form id="adminLoginForm">
+<label>Nome</label>
+<input id="aNome" placeholder="Seu nome" required>
+<label>E-mail administrativo</label>
+<input id="aEmail" type="email" placeholder="admin@exemplo.com" required>
+<button class="btn primary block" style="margin-top:20px" type="submit">Entrar como administrador</button>
+</form>
+</div>
+</div>
+
+<div id="dash" class="section" style="display:none">
+<div class="row" style="align-items:flex-start;flex-wrap:wrap;gap:12px">
+<div><div class="eyebrow">Gestão da plataforma</div><h2 style="margin-bottom:4px">Painel administrativo</h2><p class="sub" style="margin-bottom:0">Organizações, participantes e cursos em um só lugar.</p></div>
+<button class="btn ghost" onclick="CARITAS.logout()">Sair do painel</button>
+</div>
+
+<div class="statgrid" style="grid-template-columns:repeat(4,1fr)">
+<div class="stat"><b id="statOrgs">0</b><span>Organizações</span></div>
+<div class="stat"><b id="statOrgsPend">0</b><span>Pendentes de aprovação</span></div>
+<div class="stat"><b id="statParticipantes">0</b><span>Participantes</span></div>
+<div class="stat"><b id="statCursos">6</b><span>Cursos publicados</span></div>
+</div>
+
+<div class="filterbar" style="margin-top:30px">
+<button class="chip active" data-tab="orgs">Organizações</button>
+<button class="chip" data-tab="participantes">Participantes</button>
+<button class="chip" data-tab="cursos">Cursos</button>
+</div>
+
+<div id="tabOrgs" class="listcard">
+<h3>Organizações cadastradas</h3>
+<div id="listaOrgs"></div>
+</div>
+
+<div id="tabParticipantes" class="listcard" style="display:none">
+<h3>Participantes cadastrados</h3>
+<div id="listaParticipantes"></div>
+</div>
+
+<div id="tabCursos" class="listcard" style="display:none">
+<h3>Cursos publicados</h3>
+<div id="listaCursosAdmin"></div>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>APOIA+</b><div style="margin-top:8px;font-size:13px">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+const DEMO_ORGS = [
+  { id:'demo1', nome:'Instituto Novo Rumo', email:'contato@novorumo.org', area:'Educação', status:'aprovada', createdAt:'2026-08-02T00:00:00.000Z' },
+  { id:'demo2', nome:'Fundação Mãos Unidas', email:'contato@maosunidas.org', area:'Assistência social', status:'pendente', createdAt:'2026-09-10T00:00:00.000Z' }
+];
+const DEMO_PARTICIPANTES = [
+  { id:'demoP1', nome:'Maria Rodrigues', email:'maria@exemplo.com', cidade:'Madrid', criadoEm:'2026-03-14T00:00:00.000Z' },
+  { id:'demoP2', nome:'João Pereira', email:'joao@exemplo.com', cidade:'Barcelona', criadoEm:'2026-07-22T00:00:00.000Z' }
+];
+
+function checkAccess(){
+  const user = CARITAS.getUser();
+  if(user && user.role === 'admin'){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('dash').style.display = 'block';
+    renderAll();
+  } else {
+    document.getElementById('gate').style.display = 'flex';
+    document.getElementById('dash').style.display = 'none';
+  }
+}
+
+document.getElementById('adminLoginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  CARITAS.setUser({
+    nome: document.getElementById('aNome').value.trim() || 'Administrador',
+    email: document.getElementById('aEmail').value.trim(),
+    role: 'admin',
+    criadoEm: new Date().toISOString()
+  });
+  checkAccess();
+  CARITAS.initHeader();
+});
+
+function badgeForStatus(status){
+  if(status === 'aprovada') return '<span class="badge green">Aprovada</span>';
+  if(status === 'rejeitada') return '<span class="badge gray">Rejeitada</span>';
+  return '<span class="badge gold">Pendente</span>';
+}
+
+function renderOrgs(){
+  const orgs = CARITAS.getOrganizations();
+  const list = orgs.length ? orgs : DEMO_ORGS;
+  document.getElementById('statOrgs').textContent = list.length;
+  document.getElementById('statOrgsPend').textContent = list.filter(o => o.status === 'pendente').length;
+  document.getElementById('listaOrgs').innerHTML = list.map(o => `
+    <div class="litem" style="align-items:flex-start">
+      <div>
+        <b>${o.nome}</b>
+        <div style="color:var(--muted);font-size:13px">${o.email || '—'} · ${o.area || '—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${badgeForStatus(o.status)}
+        ${o.status === 'pendente' ? `<button class="btn light" style="padding:7px 10px;font-size:12px" onclick="aprovarOrg('${o.id}')">Aprovar</button><button class="btn ghost" style="padding:7px 10px;font-size:12px" onclick="rejeitarOrg('${o.id}')">Rejeitar</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function aprovarOrg(id){ CARITAS.setOrganizationStatus(id, 'aprovada'); renderOrgs(); }
+function rejeitarOrg(id){ CARITAS.setOrganizationStatus(id, 'rejeitada'); renderOrgs(); }
+
+function renderParticipantes(){
+  const list = CARITAS.getParticipants();
+  const items = list.length ? list : DEMO_PARTICIPANTES;
+  document.getElementById('statParticipantes').textContent = items.length;
+  document.getElementById('listaParticipantes').innerHTML = items.map(p => `
+    <div class="litem">
+      <div>
+        <b>${p.nome}</b>
+        <div style="color:var(--muted);font-size:13px">${p.email || '—'} · ${p.cidade || '—'}</div>
+      </div>
+      <span class="badge green">Ativo</span>
+    </div>`).join('');
+}
+
+function renderCursos(){
+  const courses = Object.values(CARITAS.courses);
+  document.getElementById('listaCursosAdmin').innerHTML = courses.map(c => `
+    <div class="litem">
+      <div>
+        <b>${c.title}</b>
+        <div style="color:var(--muted);font-size:13px">${c.tag} · ${c.format} · ${c.vacancies}</div>
+      </div>
+      <span class="badge green">Publicado</span>
+    </div>`).join('');
+}
+
+function renderAll(){ renderOrgs(); renderParticipantes(); renderCursos(); }
+
+document.querySelectorAll('.chip[data-tab]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-tab]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    ['orgs','participantes','cursos'].forEach(t => {
+      document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === chip.dataset.tab) ? 'block' : 'none';
+    });
+  });
+});
+
+checkAccess();
+</script>
+</body></html>

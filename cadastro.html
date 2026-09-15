@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Criar cadastro — Cáritas</title>
+<title>Criar cadastro — Apoia+</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header><div class="nav">
-<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<a class="brand" href="index.html">APOIA+<span>Plataforma de oportunidades</span></a>
 <button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
 <nav class="navlinks">
 <a href="index.html" data-i18n="nav_inicio">Início</a>
@@ -73,13 +73,13 @@
 <div class="authfoot"><span data-i18n="ja_tem_cadastro">Já tem cadastro?</span> <a href="login.html" style="color:var(--green);font-weight:700;text-decoration:none" data-i18n="btn_entrar">Entrar</a></div>
 </div>
 
-<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+<footer class="footer"><div class="footerin"><div><b>APOIA+</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px"><span data-i18n="footer_links">Privacidade · Termos · Ajuda</span> · <a href="admin.html" style="color:inherit;text-decoration:underline">Admin</a></div></div></footer>
 
 <script src="app.js"></script>
 <script>
 document.getElementById('cadastroForm').addEventListener('submit', function(e){
   e.preventDefault();
-  CARITAS.setUser({
+  const dados = {
     nome: document.getElementById('cNome').value.trim() || 'Participante',
     nascimento: document.getElementById('cNasc').value,
     telefone: document.getElementById('cTelefone').value.trim(),
@@ -89,7 +89,9 @@ document.getElementById('cadastroForm').addEventListener('submit', function(e){
     cidade: document.getElementById('cCidade').value.trim(),
     sobre: document.getElementById('cSobre').value.trim(),
     criadoEm: new Date().toISOString()
-  });
+  };
+  CARITAS.registerParticipant(dados);
+  CARITAS.setUser(dados);
   location.href = 'perfil.html';
 });
 </script>

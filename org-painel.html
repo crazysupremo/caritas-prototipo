@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da organização — Apoia+</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">APOIA+<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html">Início</a>
+<a href="cursos.html">Cursos</a>
+<a href="org-painel.html" class="active">Painel da organização</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section">
+<div id="guestBanner" class="banner" style="display:none">
+<span>Você está vendo um painel de exemplo. Entre como organização para ver o seu.</span>
+<a class="btn primary" href="login.html">Entrar</a>
+</div>
+
+<div class="profilehead">
+<div class="avatar lg" id="oAvatar">OR</div>
+<div class="info" style="flex:1">
+<h1 id="oNome">Organização de exemplo</h1>
+<p id="oSub">Cadastro em análise</p>
+</div>
+<a class="btn primary" href="organizacao.html">Editar dados</a>
+</div>
+
+<div class="statgrid">
+<div class="stat"><b id="statCursosOrg">4</b><span>Cursos ativos</span></div>
+<div class="stat"><b id="statAlunosOrg">128</b><span>Alunos inscritos</span></div>
+<div class="stat" id="statusCard"><b id="statusTexto">Pendente</b><span>Status do cadastro</span></div>
+<div class="stat"><b id="statMensagensOrg">3</b><span>Mensagens novas</span></div>
+</div>
+
+<div class="twocol">
+<div class="listcard">
+<div class="row" style="margin-bottom:16px">
+<h3 style="margin:0">Seus cursos</h3>
+<button class="btn light" style="padding:8px 12px;font-size:12px" onclick="adicionarCurso()">+ Novo curso</button>
+</div>
+<div id="listaCursosOrg"></div>
+</div>
+
+<div class="listcard">
+<h3>Alunos inscritos recentemente</h3>
+<div id="listaAlunosOrg"></div>
+</div>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>APOIA+</b><div style="margin-top:8px;font-size:13px">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+const DEMO_CURSOS_ORG = [
+  { nome:'Informática Básica', vagas:'12 disponíveis', status:'Ativo' },
+  { nome:'Preparação para o Trabalho', vagas:'20 disponíveis', status:'Ativo' },
+  { nome:'Espanhol para Iniciantes', vagas:'15 disponíveis', status:'Ativo' }
+];
+const DEMO_ALUNOS_ORG = [
+  { nome:'Maria Rodrigues', curso:'Informática Básica' },
+  { nome:'João Pereira', curso:'Preparação para o Trabalho' },
+  { nome:'Fatima Zahra', curso:'Espanhol para Iniciantes' }
+];
+const KEY_ORG_COURSES = 'caritas_org_courses_demo';
+
+const user = CARITAS.getUser();
+const isOrg = user && user.role === 'organization';
+document.getElementById('guestBanner').style.display = isOrg ? 'none' : 'flex';
+
+let orgRecord = null;
+if(isOrg){
+  document.getElementById('oNome').textContent = user.nome || 'Organização';
+  const orgs = CARITAS.getOrganizations();
+  orgRecord = orgs.find(o => o.id === user.orgId) || null;
+  const initials = (user.nome || 'OR').trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('oAvatar').textContent = initials;
+}
+
+const status = orgRecord ? orgRecord.status : 'aprovada';
+const statusLabels = { pendente:'Pendente de aprovação', aprovada:'Aprovada', rejeitada:'Reprovada' };
+document.getElementById('statusTexto').textContent = statusLabels[status] || 'Aprovada';
+document.getElementById('oSub').textContent = status === 'pendente'
+  ? 'Seu cadastro está em análise pela equipe Apoia+.'
+  : 'Cadastro ativo na plataforma.';
+
+function getOrgCourses(){
+  try{ return JSON.parse(localStorage.getItem(KEY_ORG_COURSES)) || []; }catch(e){ return []; }
+}
+function renderCursosOrg(){
+  const extras = getOrgCourses();
+  const items = [...extras, ...DEMO_CURSOS_ORG];
+  document.getElementById('statCursosOrg').textContent = items.length;
+  document.getElementById('listaCursosOrg').innerHTML = items.map(c => `
+    <div class="litem">
+      <div><b>${c.nome}</b><div style="color:var(--muted);font-size:13px">${c.vagas}</div></div>
+      <span class="badge green">${c.status}</span>
+    </div>`).join('');
+}
+function adicionarCurso(){
+  const nome = prompt('Nome do novo curso:');
+  if(!nome) return;
+  const extras = getOrgCourses();
+  extras.unshift({ nome, vagas:'Vagas a definir', status:'Ativo' });
+  localStorage.setItem(KEY_ORG_COURSES, JSON.stringify(extras));
+  renderCursosOrg();
+}
+renderCursosOrg();
+
+document.getElementById('listaAlunosOrg').innerHTML = DEMO_ALUNOS_ORG.map(a => `
+  <div class="litem">
+    <div><b>${a.nome}</b><div style="color:var(--muted);font-size:13px">${a.curso}</div></div>
+    <span class="badge gray">Inscrito</span>
+  </div>`).join('');
+</script>
+</body></html>

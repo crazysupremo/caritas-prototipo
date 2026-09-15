@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar cadastro — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="index.html#servicos" data-i18n="nav_servicos">Serviços</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="organizacao.html" data-i18n="nav_organizacoes">Organizações</a>
+<a href="index.html#sobre" data-i18n="nav_sobre">Sobre</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section" style="max-width:900px">
+<div class="formcard">
+<div class="eyebrow" data-i18n="cadastro_eyebrow">Cadastro de participante</div>
+<h1 data-i18n="cadastro_title">Vamos criar seu perfil</h1>
+<p class="sub" style="margin-bottom:0" data-i18n="cadastro_sub">Essas informações ajudam a personalizar cursos, agenda e atendimentos.</p>
+<div class="progressbar"><div style="width:33%"></div></div>
+
+<form id="cadastroForm">
+<label data-i18n="label_foto">Foto de perfil</label>
+<div class="uploadbox">
+<input type="file" accept="image/*" style="border:0;padding:0;margin:0">
+<div style="margin-top:6px" data-i18n="upload_hint">Envie uma foto para o padrão visual da plataforma</div>
+</div>
+
+<div class="row2">
+<div><label data-i18n="label_nome_completo">Nome completo</label><input id="cNome" placeholder="Seu nome completo" required></div>
+<div><label data-i18n="label_nascimento">Data de nascimento</label><input id="cNasc" type="date" required></div>
+</div>
+
+<div class="row2">
+<div><label data-i18n="label_telefone">Telefone / WhatsApp</label><input id="cTelefone" placeholder="+34 / +55 ..." required></div>
+<div><label data-i18n="label_email">E-mail</label><input id="cEmail" type="email" placeholder="voce@exemplo.com"></div>
+</div>
+
+<label data-i18n="label_pais">País de origem</label>
+<select id="cPais"><option>Selecione</option><option>Brasil</option><option>Venezuela</option><option>Marrocos</option><option>Síria</option><option>Outro</option></select>
+
+<div class="row2">
+<div><label data-i18n="label_idioma">Idioma preferido</label><select id="cIdioma"><option>Português</option><option>Español</option><option>English</option><option>Français</option><option>العربية</option></select></div>
+<div><label data-i18n="label_cidade">Cidade atual</label><input id="cCidade" placeholder="Cidade"></div>
+</div>
+
+<label data-i18n="label_sobre">Sobre você</label>
+<textarea id="cSobre" rows="3" data-i18n-placeholder="sobre_placeholder" placeholder="Conte um pouco sobre você, seus interesses e objetivos"></textarea>
+
+<label class="checkline"><input type="checkbox" required> <span data-i18n="termos_consent">Li e aceito os Termos de Uso e a Política de Privacidade, e consinto com o tratamento dos meus dados (LGPD/RGPD).</span></label>
+
+<div class="row" style="margin-top:24px">
+<a class="btn ghost" href="index.html" data-i18n="btn_cancelar">Cancelar</a>
+<button class="btn primary" type="submit" data-i18n="btn_continuar">Continuar</button>
+</div>
+</form>
+</div>
+<div class="authfoot"><span data-i18n="ja_tem_cadastro">Já tem cadastro?</span> <a href="login.html" style="color:var(--green);font-weight:700;text-decoration:none" data-i18n="btn_entrar">Entrar</a></div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+document.getElementById('cadastroForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  CARITAS.setUser({
+    nome: document.getElementById('cNome').value.trim() || 'Participante',
+    nascimento: document.getElementById('cNasc').value,
+    telefone: document.getElementById('cTelefone').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
+    pais: document.getElementById('cPais').value,
+    idioma: document.getElementById('cIdioma').value,
+    cidade: document.getElementById('cCidade').value.trim(),
+    sobre: document.getElementById('cSobre').value.trim(),
+    criadoEm: new Date().toISOString()
+  });
+  location.href = 'perfil.html';
+});
+</script>
+</body></html>

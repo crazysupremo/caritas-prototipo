@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cáritas — Plataforma de Apoio</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" class="active" data-i18n="nav_inicio">Início</a>
+<a href="index.html#servicos" data-i18n="nav_servicos">Serviços</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="organizacao.html" data-i18n="nav_organizacoes">Organizações</a>
+<a href="index.html#sobre" data-i18n="nav_sobre">Sobre</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<main id="inicio">
+<section class="hero">
+<div><div class="eyebrow" data-i18n="hero_eyebrow">Uma rede para conectar pessoas e oportunidades</div><h1 data-i18n="hero_title">Encontre apoio, estudos e novas oportunidades.</h1><p data-i18n="hero_desc">Uma plataforma central para pessoas, empresas e organizações. Agende atendimentos e visitas, descubra cursos e mantenha seu perfil sempre atualizado.</p><div class="actions"><a class="btn primary" href="cadastro.html" data-i18n="hero_cta1">Criar meu cadastro</a><a class="btn light" href="cursos.html" data-i18n="hero_cta2">Ver cursos</a></div></div>
+<div class="visual"><div class="card main"><div class="eyebrow" data-i18n="hero_card_title">Próximo atendimento</div><h3 data-i18n="hero_card_sub">Orientação profissional</h3><p style="color:#66756f" data-i18n="hero_card_time">Hoje · 15:30 · Atendimento presencial</p><a class="btn primary" href="agenda.html" data-i18n="hero_card_btn">Ver agenda</a></div><a class="card small" href="perfil.html" style="text-decoration:none;color:inherit;display:block"><div style="display:flex;gap:12px;align-items:center"><div class="avatar">MR</div><div><b data-i18n="hero_profile_label">Meu perfil</b><div style="color:#718079;font-size:13px" data-i18n="hero_profile_sub">Cadastro completo · 92%</div></div></div></a></div>
+</section>
+
+<section class="section" id="servicos"><h2 data-i18n="servicos_title">Uma plataforma para facilitar o acesso</h2><p class="sub" data-i18n="servicos_sub">Tudo organizado em um só lugar.</p><div class="grid">
+<a class="feature" href="agenda.html" style="text-decoration:none;color:inherit"><div class="icon">📅</div><h3 data-i18n="feat_agendar_title">Agendar estudos</h3><p data-i18n="feat_agendar_desc">Escolha um curso, horário e formato de estudo de maneira simples.</p></a>
+<a class="feature" href="agenda.html" style="text-decoration:none;color:inherit"><div class="icon">🤝</div><h3 data-i18n="feat_visitas_title">Marcar visitas</h3><p data-i18n="feat_visitas_desc">Solicite e acompanhe visitas e atendimentos com informações claras.</p></a>
+<a class="feature" href="organizacao.html" style="text-decoration:none;color:inherit"><div class="icon">🏢</div><h3 data-i18n="feat_org_title">Organizações</h3><p data-i18n="feat_org_desc">Empresas e entidades podem criar um perfil e publicar oportunidades.</p></a>
+</div></section>
+
+<section class="section" id="cursos"><h2 data-i18n="cursos_title">Cursos e oportunidades</h2><p class="sub"><span data-i18n="cursos_sub">Exemplo de como as oportunidades poderão aparecer.</span> <a href="cursos.html" style="color:var(--green);font-weight:700" data-i18n="ver_todos">Ver todos →</a></p><div class="courses">
+<a class="course" href="curso-detalhe.html?c=informatica"><div class="cover"></div><div class="coursebody"><span class="tag" data-i18n="filtro_profissionalizante">Profissionalizante</span><h3 data-i18n="curso_informatica_nome">Informática Básica</h3><p data-i18n="curso_informatica_desc">Curso introdutório para desenvolver competências digitais.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=trabalho"><div class="cover" style="background:linear-gradient(135deg,#335f9d,#8fb5e2)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_empregabilidade">Empregabilidade</span><h3 data-i18n="curso_trabalho_nome">Preparação para o Trabalho</h3><p data-i18n="curso_trabalho_desc">Orientações práticas para currículo e entrevistas.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=espanhol"><div class="cover" style="background:linear-gradient(135deg,#b37a32,#e9c47d)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_idiomas">Idiomas</span><h3 data-i18n="curso_espanhol_nome">Espanhol para Iniciantes</h3><p data-i18n="curso_espanhol_desc">Primeiros passos para comunicação no dia a dia.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+</div></section>
+
+<section class="section" id="organizacoes"><div class="cta"><div><h2 style="color:white" data-i18n="cta_title">Sua organização também pode participar</h2><p data-i18n="cta_desc">Cadastre sua empresa ou organização e disponibilize cursos, formações e oportunidades para a comunidade.</p></div><a class="btn" style="background:white;color:var(--green)" href="organizacao.html" data-i18n="cta_btn">Cadastrar organização</a></div></section>
+
+<section class="section" id="sobre"><h2 data-i18n="sobre_title">Perfil do participante</h2><p class="sub" data-i18n="sobre_sub">No cadastro, a pessoa terá um perfil padronizado e fácil de atualizar.</p><div class="grid">
+<div class="feature"><div class="avatar">JP</div><h3 data-i18n="feat_foto_title">Foto de perfil</h3><p data-i18n="feat_foto_desc">Upload com padrão visual único para manter a plataforma organizada.</p></div>
+<div class="feature"><div class="icon">🪪</div><h3 data-i18n="feat_dados_title">Dados essenciais</h3><p data-i18n="feat_dados_desc">Nome, telefone, data de nascimento e outras informações necessárias.</p></div>
+<div class="feature"><div class="icon">🌍</div><h3 data-i18n="feat_multilang_title">Multilíngue</h3><p data-i18n="feat_multilang_desc">Português, espanhol, inglês, francês e árabe, com interface preparada para expansão.</p></div>
+</div></section>
+</main>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+<script src="app.js"></script>
+</body></html>

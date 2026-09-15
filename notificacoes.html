@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notificações — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="agenda.html" data-i18n="nav_agenda">Agenda</a>
+<a href="perfil.html" data-i18n="nav_perfil">Meu perfil</a>
+<a href="notificacoes.html" class="active" data-i18n="nav_notificacoes">Notificações</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section">
+<div class="row" style="align-items:flex-start;flex-wrap:wrap;gap:12px">
+<div><div class="eyebrow" data-i18n="notif_eyebrow">Central de avisos</div><h2 style="margin-bottom:4px" data-i18n="notif_title">Notificações</h2><p class="sub" style="margin-bottom:0" data-i18n="notif_sub">Cursos, agendamentos e novidades da plataforma.</p></div>
+<button class="btn light" onclick="CARITAS.markAllRead();render()" data-i18n="btn_marcar_lidas">Marcar todas como lidas</button>
+</div>
+
+<div id="list" style="margin-top:20px;max-width:720px"></div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+function timeAgo(dateStr){
+  try{ return new Date(dateStr).toLocaleDateString('pt-BR'); }catch(e){ return dateStr; }
+}
+function render(){
+  const list = document.getElementById('list');
+  const items = CARITAS.getNotifications();
+  const read = CARITAS.getReadIds();
+  if(items.length === 0){
+    list.innerHTML = '<div class="emptystate">' + CARITAS.dict().notif_empty + '</div>';
+    return;
+  }
+  list.innerHTML = items.map(n => {
+    const isUnread = !read.includes(n.id);
+    return '<div class="notifitem ' + (isUnread ? 'unread' : '') + '" data-id="' + n.id + '">' +
+      '<span class="notifdot"></span>' +
+      '<div style="flex:1"><b>' + n.title + '</b><p>' + n.body + '</p></div>' +
+      '<span class="notifdate">' + timeAgo(n.date) + '</span>' +
+      '</div>';
+  }).join('');
+  list.querySelectorAll('.notifitem').forEach(el => {
+    el.addEventListener('click', () => { CARITAS.markRead(el.dataset.id); render(); CARITAS.initHeader(); });
+  });
+}
+render();
+const origSetLang = CARITAS.setLang.bind(CARITAS);
+CARITAS.setLang = function(lang){ origSetLang(lang); render(); };
+</script>
+</body></html>

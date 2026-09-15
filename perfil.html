@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu perfil — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="agenda.html" data-i18n="nav_agenda">Agenda</a>
+<a href="perfil.html" class="active" data-i18n="nav_perfil">Meu perfil</a>
+<a href="notificacoes.html" data-i18n="nav_notificacoes">Notificações</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section">
+<div id="guestBanner" class="banner" style="display:none">
+<span data-i18n="guest_banner_perfil">Você está vendo um perfil de exemplo. Faça login para ver o seu de verdade.</span>
+<a class="btn primary" href="login.html" data-i18n="btn_entrar">Entrar</a>
+</div>
+
+<div class="profilehead">
+<div class="avatar lg" id="pAvatar">MR</div>
+<div class="info" style="flex:1">
+<h1 id="pNome">Maria Rodrigues</h1>
+<p id="pSub">Membro desde março de 2025 · São Paulo, Brasil</p>
+</div>
+<a class="btn primary" href="cadastro.html" data-i18n="btn_editar_perfil">Editar perfil</a>
+</div>
+
+<div class="statgrid">
+<div class="stat"><b id="statCursos">3</b><span data-i18n="stat_cursos">Cursos inscritos</span></div>
+<div class="stat"><b id="statAgenda">1</b><span data-i18n="stat_agenda">Compromissos agendados</span></div>
+<div class="stat"><b id="statCompleto">92%</b><span data-i18n="stat_completo">Cadastro completo</span></div>
+<div class="stat"><b id="statCertificados">5</b><span data-i18n="stat_certificados">Certificados</span></div>
+</div>
+
+<div class="twocol">
+<div class="listcard">
+<h3 data-i18n="meus_cursos">Meus cursos</h3>
+<div id="listaCursos"></div>
+<a class="btn light block" href="cursos.html" style="margin-top:16px" data-i18n="ver_todos_cursos">Ver todos os cursos</a>
+</div>
+
+<div class="listcard">
+<h3 data-i18n="proximos_atendimentos">Próximos atendimentos</h3>
+<div id="listaAgenda"></div>
+<a class="btn light block" href="agenda.html" style="margin-top:16px" data-i18n="ver_agenda_completa">Ver agenda completa</a>
+</div>
+</div>
+
+<div class="listcard" style="margin-top:22px">
+<h3 data-i18n="dados_pessoais">Dados pessoais</h3>
+<div class="litem"><div style="color:var(--muted)" data-i18n="d_telefone">Telefone</div><b id="dTelefone">—</b></div>
+<div class="litem"><div style="color:var(--muted)" data-i18n="d_email">E-mail</div><b id="dEmail">—</b></div>
+<div class="litem"><div style="color:var(--muted)" data-i18n="d_nascimento">Data de nascimento</div><b id="dNascimento">—</b></div>
+<div class="litem"><div style="color:var(--muted)" data-i18n="d_idioma">Idioma preferido</div><b id="dIdioma">—</b></div>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+const DEMO_CURSOS = [
+  { name:'Informática Básica', status:'Em andamento', badge:'green', detail:'Módulo 3 de 6' },
+  { name:'Preparação para o Trabalho', status:'Em andamento', badge:'green', detail:'Módulo 1 de 4' },
+  { name:'Espanhol para Iniciantes', status:'Concluído', badge:'gray', detail:'Concluído em 12/02' }
+];
+const DEMO_AGENDA = [
+  { name:'Orientação profissional', detail:'Hoje · 15:30', badge:'gold', tag:'Presencial' },
+  { name:'Visita — Cáritas Centro', detail:'Sex · 21/09 · 10:00', badge:'gold', tag:'Visita' }
+];
+
+const user = CARITAS.getUser();
+document.getElementById('guestBanner').style.display = user ? 'none' : 'flex';
+
+if(user){
+  document.getElementById('pNome').textContent = user.nome || 'Participante';
+  const criado = user.criadoEm ? new Date(user.criadoEm).toLocaleDateString('pt-BR') : '—';
+  document.getElementById('pSub').textContent = 'Membro desde ' + criado + (user.cidade ? (' · ' + user.cidade) : '');
+  const initials = (user.nome || 'P').trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('pAvatar').textContent = initials;
+  document.getElementById('dTelefone').textContent = user.telefone || '—';
+  document.getElementById('dEmail').textContent = user.email || '—';
+  document.getElementById('dNascimento').textContent = user.nascimento || '—';
+  document.getElementById('dIdioma').textContent = user.idioma || '—';
+}
+
+const enrollments = CARITAS.getEnrollments();
+const cursosParaExibir = enrollments.length
+  ? enrollments.map(e => ({ name: e.name, status:'Em andamento', badge:'green', detail:'Inscrito em ' + new Date(e.date).toLocaleDateString('pt-BR') }))
+  : DEMO_CURSOS;
+document.getElementById('listaCursos').innerHTML = cursosParaExibir.map(c =>
+  '<div class="litem"><div><b>' + c.name + '</b><div style="color:var(--muted);font-size:13px">' + c.detail + '</div></div><span class="badge ' + c.badge + '">' + c.status + '</span></div>'
+).join('');
+
+const appointments = CARITAS.getAppointments();
+const agendaParaExibir = appointments.length
+  ? appointments.slice(-3).map(a => ({ name:a.tipo, detail:a.dia + ' · ' + a.hora, badge:'gold', tag:a.tipo }))
+  : DEMO_AGENDA;
+document.getElementById('listaAgenda').innerHTML = agendaParaExibir.map(a =>
+  '<div class="litem"><div><b>' + a.name + '</b><div style="color:var(--muted);font-size:13px">' + a.detail + '</div></div><span class="badge ' + a.badge + '">' + a.tag + '</span></div>'
+).join('');
+
+document.getElementById('statCursos').textContent = cursosParaExibir.length;
+document.getElementById('statAgenda').textContent = agendaParaExibir.length;
+</script>
+</body></html>

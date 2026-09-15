@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursos — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="index.html#servicos" data-i18n="nav_servicos">Serviços</a>
+<a href="cursos.html" class="active" data-i18n="nav_cursos">Cursos</a>
+<a href="organizacao.html" data-i18n="nav_organizacoes">Organizações</a>
+<a href="index.html#sobre" data-i18n="nav_sobre">Sobre</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section">
+<div class="eyebrow" data-i18n="catalogo_eyebrow">Catálogo</div>
+<h2 data-i18n="cursos_title">Cursos e oportunidades</h2>
+<p class="sub" data-i18n="catalogo_sub">Encontre um curso gratuito para desenvolver novas competências.</p>
+
+<div class="filterbar">
+<input class="searchbox" data-i18n-placeholder="busca_placeholder" placeholder="Buscar por curso, área ou palavra-chave">
+<button class="chip active" data-i18n="filtro_todos">Todos</button>
+<button class="chip" data-i18n="filtro_profissionalizante">Profissionalizante</button>
+<button class="chip" data-i18n="filtro_empregabilidade">Empregabilidade</button>
+<button class="chip" data-i18n="filtro_idiomas">Idiomas</button>
+<button class="chip" data-i18n="filtro_presencial">Presencial</button>
+<button class="chip" data-i18n="filtro_online">Online</button>
+</div>
+
+<div class="courses" style="grid-template-columns:repeat(3,1fr)">
+<a class="course" href="curso-detalhe.html?c=informatica"><div class="cover"></div><div class="coursebody"><span class="tag" data-i18n="filtro_profissionalizante">Profissionalizante</span><h3 data-i18n="curso_informatica_nome">Informática Básica</h3><p data-i18n="curso_informatica_desc">Curso introdutório para desenvolver competências digitais.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=trabalho"><div class="cover" style="background:linear-gradient(135deg,#335f9d,#8fb5e2)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_empregabilidade">Empregabilidade</span><h3 data-i18n="curso_trabalho_nome">Preparação para o Trabalho</h3><p data-i18n="curso_trabalho_desc">Orientações práticas para currículo e entrevistas.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=espanhol"><div class="cover" style="background:linear-gradient(135deg,#b37a32,#e9c47d)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_idiomas">Idiomas</span><h3 data-i18n="curso_espanhol_nome">Espanhol para Iniciantes</h3><p data-i18n="curso_espanhol_desc">Primeiros passos para comunicação no dia a dia.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=informatica-avancada"><div class="cover" style="background:linear-gradient(135deg,#5c4b9e,#a89be0)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_profissionalizante">Profissionalizante</span><h3 data-i18n="curso_informatica_avancada_nome">Informática Avançada</h3><p data-i18n="curso_informatica_avancada_desc">Planilhas, apresentações e ferramentas de produtividade.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=empreendedorismo"><div class="cover" style="background:linear-gradient(135deg,#0c8c66,#c7e6ab)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_empregabilidade">Empregabilidade</span><h3 data-i18n="curso_empreendedorismo_nome">Introdução ao Empreendedorismo</h3><p data-i18n="curso_empreendedorismo_desc">Primeiros passos para abrir um pequeno negócio.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+<a class="course" href="curso-detalhe.html?c=frances"><div class="cover" style="background:linear-gradient(135deg,#9d3352,#e08fa8)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_idiomas">Idiomas</span><h3 data-i18n="curso_frances_nome">Francês para Iniciantes</h3><p data-i18n="curso_frances_desc">Comunicação básica para o dia a dia e trabalho.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+<script src="app.js"></script>
+</body></html>

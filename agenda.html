@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="agenda.html" class="active" data-i18n="nav_agenda">Agenda</a>
+<a href="perfil.html" data-i18n="nav_perfil">Meu perfil</a>
+<a href="notificacoes.html" data-i18n="nav_notificacoes">Notificações</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<div class="section">
+<div id="guestBanner" class="banner" style="display:none">
+<span data-i18n="guest_banner_agenda">Faça login para confirmar agendamentos com o seu nome.</span>
+<a class="btn primary" href="login.html" data-i18n="btn_entrar">Entrar</a>
+</div>
+
+<div class="eyebrow" data-i18n="agenda_eyebrow">Meus compromissos</div>
+<h2 data-i18n="agenda_title">Agenda de estudos e visitas</h2>
+<p class="sub" data-i18n="agenda_sub">Acompanhe seus horários ou marque um novo atendimento.</p>
+
+<div class="agendagrid">
+<div class="calendarcard">
+<h3 style="margin:0 0 6px">Setembro 2026</h3>
+<p class="sub" style="margin-bottom:0" data-i18n="agenda_hint">Selecione um dia para ver os horários disponíveis.</p>
+<div class="daylist" id="dayList">
+<button class="daybtn" data-dia="14/09"><span>seg</span><b>14</b></button>
+<button class="daybtn active" data-dia="15/09"><span>ter</span><b>15</b></button>
+<button class="daybtn" data-dia="16/09"><span>qua</span><b>16</b></button>
+<button class="daybtn" data-dia="17/09"><span>qui</span><b>17</b></button>
+<button class="daybtn" data-dia="18/09"><span>sex</span><b>18</b></button>
+<button class="daybtn" data-dia="19/09"><span>sáb</span><b>19</b></button>
+<button class="daybtn" data-dia="20/09"><span>dom</span><b>20</b></button>
+</div>
+
+<h3 style="margin:26px 0 12px" data-i18n="agenda_novo">Marcar novo compromisso</h3>
+<form id="agendaForm">
+<label style="font-size:13px;font-weight:700;color:#3c4c46" data-i18n="label_tipo">Tipo</label>
+<select id="fTipo" style="width:100%;padding:12px;margin:6px 0 12px;border:1px solid #d8e4de;border-radius:11px">
+<option>Estudo / curso</option>
+<option>Atendimento</option>
+<option>Visita</option>
+</select>
+<label style="font-size:13px;font-weight:700;color:#3c4c46" data-i18n="label_horario">Horário preferido</label>
+<select id="fHora" style="width:100%;padding:12px;margin:6px 0 12px;border:1px solid #d8e4de;border-radius:11px">
+<option>09:00</option><option>10:30</option><option>14:00</option><option>15:30</option><option>17:00</option>
+</select>
+<button class="btn primary block" type="submit" data-i18n="btn_confirmar_agendamento">Confirmar agendamento</button>
+</form>
+</div>
+
+<div>
+<h3 style="margin:0 0 14px" id="agendaListTitle" data-i18n="meus_horarios">Meus horários</h3>
+<div id="agendaList"></div>
+</div>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+
+<script src="app.js"></script>
+<script>
+const DEMO_AGENDA = [
+  { tipo:'Orientação profissional', dia:'hoje', hora:'15:30', badge:'gold' },
+  { tipo:'Informática Básica — Módulo 3', dia:'hoje', hora:'17:00', badge:'green' },
+  { tipo:'Visita — Cáritas Centro', dia:'21/09', hora:'10:00', badge:'gold' },
+  { tipo:'Preparação para o Trabalho — Módulo 2', dia:'24/09', hora:'14:00', badge:'green' }
+];
+
+let selectedDay = '15/09';
+document.getElementById('guestBanner').style.display = CARITAS.getUser() ? 'none' : 'flex';
+
+document.querySelectorAll('.daybtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.daybtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDay = btn.dataset.dia;
+  });
+});
+
+function renderAgenda(){
+  const appts = CARITAS.getAppointments();
+  const items = appts.length ? appts.map(a => ({ tipo:a.tipo, dia:a.dia, hora:a.hora, badge: a.tipo === 'Visita' ? 'gold' : 'green' })) : DEMO_AGENDA;
+  document.getElementById('agendaList').innerHTML = items.map(a =>
+    '<div class="agendaitem"><div class="timepill">' + a.hora + '<span>' + a.dia + '</span></div><div style="flex:1"><b>' + a.tipo + '</b><div style="color:var(--muted);font-size:13px">Confirmado na plataforma</div></div><span class="badge ' + a.badge + '">' + a.tipo + '</span></div>'
+  ).join('');
+}
+renderAgenda();
+
+document.getElementById('agendaForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  if(!CARITAS.requireLogin('agenda.html')) return;
+  CARITAS.addAppointment({
+    tipo: document.getElementById('fTipo').value,
+    dia: selectedDay,
+    hora: document.getElementById('fHora').value
+  });
+  renderAgenda();
+  CARITAS.initHeader();
+  alert('✔');
+});
+</script>
+</body></html>

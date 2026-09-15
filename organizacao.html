@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organizações — Cáritas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="nav">
+<a class="brand" href="index.html">CÁRITAS<span>Plataforma de oportunidades</span></a>
+<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+<nav class="navlinks">
+<a href="index.html" data-i18n="nav_inicio">Início</a>
+<a href="index.html#servicos" data-i18n="nav_servicos">Serviços</a>
+<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
+<a href="organizacao.html" class="active" data-i18n="nav_organizacoes">Organizações</a>
+<a href="index.html#sobre" data-i18n="nav_sobre">Sobre</a>
+</nav>
+<select class="lang" id="langSelect" aria-label="Idioma">
+<option value="pt">Português</option>
+<option value="es">Español</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="ar">العربية</option>
+</select>
+<div id="authSlot"></div>
+</div></header>
+
+<section class="hero" style="padding-bottom:20px">
+<div><div class="eyebrow" data-i18n="org_eyebrow">Para empresas e entidades</div><h1 style="font-size:42px" data-i18n="org_title">Sua organização também pode participar.</h1><p data-i18n="org_desc">Cadastre sua empresa, ONG ou entidade parceira, publique cursos e oportunidades, e acompanhe participantes em um só lugar.</p></div>
+<div class="visual" style="min-height:280px"><div class="card main" style="width:80%"><div class="eyebrow" data-i18n="org_panel_title">Painel da organização</div><h3 data-i18n="org_panel_name">Cáritas Formação Profissional</h3><p style="color:#66756f" data-i18n="org_panel_stats">4 cursos ativos · 128 inscritos</p></div><div class="card small"><div style="display:flex;gap:12px;align-items:center"><div class="avatar">CF</div><div><b data-i18n="org_verified">Perfil verificado</b><div style="color:#718079;font-size:13px" data-i18n="org_verified_sub">Documentação completa</div></div></div></div></div>
+</section>
+
+<div class="section tight">
+<div class="grid">
+<div class="feature"><div class="icon">📋</div><h3 data-i18n="org_feat1_title">Publique cursos</h3><p data-i18n="org_feat1_desc">Anuncie cursos, formações e oportunidades para a comunidade atendida.</p></div>
+<div class="feature"><div class="icon">👥</div><h3 data-i18n="org_feat2_title">Gerencie inscritos</h3><p data-i18n="org_feat2_desc">Acompanhe quem se inscreveu e o progresso de cada participante.</p></div>
+<div class="feature"><div class="icon">📈</div><h3 data-i18n="org_feat3_title">Relatórios simples</h3><p data-i18n="org_feat3_desc">Veja o impacto da sua organização com dados claros e atualizados.</p></div>
+</div>
+</div>
+
+<div class="section tight">
+<div class="formcard">
+<div class="eyebrow" data-i18n="org_form_eyebrow">Cadastro de organização</div>
+<h1 data-i18n="org_form_title">Cadastre sua organização</h1>
+<p class="sub" style="margin-bottom:0" data-i18n="org_form_sub">Nossa equipe analisa e verifica o cadastro antes da publicação de cursos.</p>
+<div class="progressbar"><div style="width:20%"></div></div>
+
+<form onsubmit="event.preventDefault();alert('✔')">
+<label data-i18n="label_nome_org">Nome da organização</label>
+<input placeholder="Nome da empresa ou entidade" required>
+
+<div class="row2">
+<div><label data-i18n="label_registro">CNPJ / NIF / Registro</label><input placeholder="Número de registro"></div>
+<div><label data-i18n="label_area">Área de atuação</label><select><option>Educação</option><option>Empregabilidade</option><option>Assistência social</option><option>Saúde</option><option>Outro</option></select></div>
+</div>
+
+<div class="row2">
+<div><label data-i18n="label_email_contato">E-mail de contato</label><input type="email" placeholder="contato@organizacao.org" required></div>
+<div><label data-i18n="label_telefone_org">Telefone</label><input placeholder="+34 / +55 ..."></div>
+</div>
+
+<label data-i18n="label_site">Site (opcional)</label>
+<input placeholder="https://">
+
+<label data-i18n="label_desc_org">Descrição da organização</label>
+<textarea rows="3" data-i18n-placeholder="desc_org_placeholder" placeholder="Conte um pouco sobre a organização e seu trabalho"></textarea>
+
+<label data-i18n="label_logo">Logo</label>
+<div class="uploadbox"><input type="file" accept="image/*" style="border:0;padding:0;margin:0"><div style="margin-top:6px" data-i18n="upload_logo_hint">Envie o logo da organização</div></div>
+
+<label class="checkline"><input type="checkbox" required> <span data-i18n="termos_org">Confirmo que tenho autorização para cadastrar esta organização e aceito os Termos para Parceiros.</span></label>
+
+<div class="row" style="margin-top:24px">
+<a class="btn ghost" href="index.html" data-i18n="btn_cancelar">Cancelar</a>
+<button class="btn primary" type="submit" data-i18n="btn_enviar_analise">Enviar para análise</button>
+</div>
+</form>
+</div>
+</div>
+
+<footer class="footer"><div class="footerin"><div><b>CÁRITAS</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px" data-i18n="footer_links">Privacidade · Termos · Ajuda</div></div></footer>
+<script src="app.js"></script>
+</body></html>

@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function approved() {
+      return signedIn()
+        && get(/databases/$(database)/documents/asociaciones/$(request.auth.uid)).data.estado == "aprobada";
+    }
+    function owns(d) { return signedIn() && d.asociacionId == request.auth.uid; }
+
+    // Administradores: se crean a mano en la consola.
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Una asociación por cuenta. Empieza "pendiente"; solo un admin la aprueba.
+    match /asociaciones/{uid} {
+      allow read: if true;
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.estado == "pendiente";
+      allow update: if (signedIn() && request.auth.uid == uid
+                        && request.resource.data.estado == resource.data.estado)
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Eventos y noticias: solo asociaciones aprobadas publican, y solo lo suyo.
+    match /eventos/{id} {
+      allow read: if true;
+      allow create: if approved() && owns(request.resource.data);
+      allow update: if approved() && owns(resource.data) && owns(request.resource.data);
+      allow delete: if owns(resource.data) || isAdmin();
+    }
+    match /noticias/{id} {
+      allow read: if true;
+      allow create: if approved() && owns(request.resource.data);
+      allow update: if approved() && owns(resource.data) && owns(request.resource.data);
+      allow delete: if owns(resource.data) || isAdmin();
+    }
+
+    // Imágenes comprimidas en el navegador (máx. ~450 KB).
+    match /imagenes/{id} {
+      allow read: if true;
+      allow create, update: if approved() && owns(request.resource.data)
+                    && (resource == null || owns(resource.data))
+                    && request.resource.data.data.size() < 450000;
+      allow delete: if owns(resource.data) || isAdmin();
+    }
+  }
+}

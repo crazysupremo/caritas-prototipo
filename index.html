@@ -1,59 +1,304 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apoia+ — Plataforma de Apoio</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apoia+ · Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Agenda de eventos y noticias de las asociaciones de Miranda de Ebro.">
+<meta name="theme-color" content="#0C5A69">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Apoia+">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: menú lateral fijo (cajón en móvil) + columna de contenido con barra superior pegajosa */
+:root{
+  --paper:#F2F5F6; --surface:#FFFFFF; --ink:#15222C; --muted:#5B6975; --line:#D5DEE3;
+  --river:#0C5A69; --river-deep:#08414C; --river-ink:#FFFFFF; --river-soft:#DDEBEE; --sun:#EFAE22; --sun-ink:#2A1C00;
+  --danger:#B42318; --ok:#1F7A4A; --warn-bg:#FFF4D6; --err-bg:#FDE8E6;
+  --display:"Bricolage Grotesque","Avenir Next Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --nav-w:264px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E181E; --surface:#15232B; --ink:#E6EDF0; --muted:#94A4AE; --line:#29404B;
+  --river:#0F4B57; --river-deep:#0A333B; --river-ink:#F1F7F8; --river-soft:#183640; --sun:#F4C04D; --sun-ink:#2A1C00;
+  --danger:#F0877C; --ok:#6CCB97; --warn-bg:#3A2F12; --err-bg:#3B1D1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E181E; --surface:#15232B; --ink:#E6EDF0; --muted:#94A4AE; --line:#29404B;
+  --river:#0F4B57; --river-deep:#0A333B; --river-ink:#F1F7F8; --river-soft:#183640; --sun:#F4C04D; --sun-ink:#2A1C00;
+  --danger:#F0877C; --ok:#6CCB97; --warn-bg:#3A2F12; --err-bg:#3B1D1A; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--river)}
+img{max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+#view a:not(.btn),.modal a:not(.btn){color:var(--river)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(#view,.modal) a:not(.btn){color:#7FC9D3}}
+:root[data-theme="dark"] :is(#view,.modal) a:not(.btn){color:#7FC9D3}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.muted{color:var(--muted);margin:0}
+h1,h2,h3{text-wrap:balance}
+
+/* ---- Menú lateral ---- */
+.nav{position:fixed;top:env(safe-area-inset-top,0px);bottom:0;left:0;width:var(--nav-w);background:var(--river);color:var(--river-ink);z-index:50;display:flex;flex-direction:column;overflow-y:auto;padding:20px 12px calc(20px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.brand{display:flex;gap:10px;align-items:center;padding:0 10px 18px}
+.brand img{width:40px;height:40px;border-radius:11px}
+.brand b{font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:-.02em;line-height:1}
+.brand span{display:block;font-size:.78rem;opacity:.75}
+.nav h4{margin:18px 10px 6px;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;opacity:.65;font-weight:600}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 10px;border-radius:10px;color:var(--river-ink);text-decoration:none;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.08)}
+.nav a[aria-current="page"]{background:var(--paper);color:var(--ink);font-weight:700}
+.nav a svg{width:20px;height:20px;flex-shrink:0}
+.nav .dot{width:10px;height:10px;border-radius:50%;margin:0 5px;flex-shrink:0}
+.nav .count{margin-left:auto;font-size:.78rem;background:rgba(255,255,255,.14);border-radius:999px;padding:1px 8px}
+.nav a[aria-current="page"] .count{background:var(--river-soft)}
+.nav .publish{margin-top:auto;background:var(--sun);color:var(--sun-ink);font-weight:700;justify-content:center}
+.nav .publish:hover{background:var(--sun)}
+.nav .publish[aria-current="page"]{background:var(--sun);color:var(--sun-ink)}
+.scrim{display:none}
+
+/* ---- Columna principal ---- */
+.main{margin-left:var(--nav-w);min-height:100vh}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-block:12px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.topbar h1{font-family:var(--display);font-weight:700;font-size:1.25rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-btn{display:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;place-items:center}
+.menu-btn svg{width:22px;height:22px}
+.install-btn{background:var(--sun);color:var(--sun-ink);border:0;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.demo-bar{background:var(--warn-bg);color:var(--ink);font-size:.88rem;border-bottom:1px solid var(--line)}
+.demo-bar .in{max-width:1120px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:8px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+#view,.status-wrap{max-width:1120px;margin:0 auto;padding-block:28px 64px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.status-wrap{padding-block:16px 0}
+.status-wrap:has(#status[hidden]){display:none}
+
+@media (max-width:900px){
+  .nav{transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  body.nav-open .nav{transform:none}
+  body.nav-open .scrim{display:block;position:fixed;inset:0;background:rgba(5,15,20,.5);z-index:45}
+  .main{margin-left:0}
+  .menu-btn{display:grid}
+  .topbar .in,.demo-bar .in,#view,.status-wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (prefers-reduced-motion: reduce){.nav{transition:none}}
+
+/* ---- Intro y buscador ---- */
+.intro{margin-bottom:22px}
+.intro h2{font-family:var(--display);font-weight:800;font-size:clamp(2rem,5.5vw,3.2rem);line-height:1;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{margin:0;color:var(--muted);max-width:60ch}
+.eyebrow{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--c)!important;margin-bottom:6px!important}
+.search{width:100%;max-width:560px;margin-top:18px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 16px}
+
+/* ---- Tarjetas de evento ---- */
+.group{margin-bottom:34px}
+.group h3{font-family:var(--display);font-weight:700;font-size:1.35rem;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.group h3 span,.sub span{font-family:var(--body);font-size:.8rem;font-weight:700;background:var(--river-soft);color:var(--ink);border-radius:999px;padding:1px 9px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card-ev{display:flex;flex-direction:column;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:0;cursor:pointer;transition:border-color .15s,transform .15s}
+.card-ev:hover{border-color:var(--river);transform:translateY(-2px)}
+@media (prefers-reduced-motion: reduce){.card-ev:hover{transform:none}}
+.cover{position:relative;display:block;aspect-ratio:16/9;max-width:100%;background:color-mix(in srgb,var(--c) 22%,var(--surface))}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s}
+.cover img.in,.ncover img.in,.hero-img.in{opacity:1}
+.date-badge{position:absolute;left:12px;bottom:12px;background:var(--surface);color:var(--ink);border-radius:12px;padding:6px 10px;text-align:center;line-height:1;min-width:52px}
+.date-badge b{display:block;font-family:var(--display);font-weight:800;font-size:1.5rem}
+.date-badge span{font-size:.72rem;color:var(--muted);text-transform:lowercase}
+.card-ev .body,.card-news .body{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px}
+.cat-label{font-size:.76rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c);display:inline-flex;align-items:center;gap:6px}
+.cat-label::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cat-label{color:color-mix(in srgb,var(--c) 55%,#fff)}}
+:root[data-theme="dark"] .cat-label{color:color-mix(in srgb,var(--c) 55%,#fff)}
+.card-ev .t,.card-news .t{font-weight:700;font-size:1.06rem;line-height:1.3}
+.card-ev .meta{font-size:.9rem;color:var(--muted)}
+.card-ev .by{font-size:.85rem;color:var(--muted);margin-top:auto;padding-top:6px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:18px;padding:28px 22px;text-align:center;color:var(--muted)}
+.empty p{margin:0 0 14px}
+.empty p:last-child{margin:0}
+
+/* ---- Noticias ---- */
+.news-list{display:flex;flex-direction:column;gap:14px;max-width:820px}
+.card-news{display:grid;grid-template-columns:220px minmax(0,1fr);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:0;cursor:pointer}
+.card-news:not(:has(.ncover)){grid-template-columns:1fr}
+.card-news:hover{border-color:var(--river)}
+.ncover{position:relative;display:block;background:var(--river-soft);min-height:150px}
+.ncover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s}
+.ndate{font-size:.85rem;color:var(--muted)}
+.excerpt{color:var(--muted);font-size:.95rem}
+@media (max-width:600px){.card-news{grid-template-columns:1fr}.ncover{aspect-ratio:16/9;min-height:0}}
+
+/* ---- Calendario ---- */
+.cal-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:1000px){.cal-layout{grid-template-columns:minmax(0,1fr)}}
+.month-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.month-title{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,7vw,4.2rem);line-height:.9;letter-spacing:-.035em;margin:0;text-transform:lowercase}
+.month-title small{font-size:.32em;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:.4em}
+.month-nav{display:flex;gap:6px}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px}
+.text-btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 16px;height:42px;cursor:pointer;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{font-size:.78rem;color:var(--muted);text-align:center;padding:4px 0;font-weight:600}
+.day{background:var(--surface);border:1px solid transparent;border-radius:12px;min-height:72px;padding:6px 7px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px}
+.day:hover{border-color:var(--line)}
+.day.out{background:transparent;color:var(--muted);opacity:.55}
+.day .n{font-family:var(--display);font-weight:700;font-size:1.1rem;line-height:1;font-variant-numeric:tabular-nums}
+.day.today .n{background:var(--sun);color:var(--sun-ink);border-radius:8px;padding:3px 6px;align-self:flex-start}
+.day[aria-pressed="true"]{border-color:var(--river);box-shadow:inset 0 0 0 1px var(--river)}
+.day .dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:auto}
+.day .dots i{width:8px;height:8px;border-radius:50%}
+@media (max-width:560px){.day{min-height:52px;padding:5px}.day .n{font-size:.95rem}}
+.day-title{font-family:var(--display);font-weight:700;font-size:1.35rem;margin:0 0 12px}
+.rows{display:flex;flex-direction:column;gap:8px}
+.ev-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:0;padding:12px;cursor:pointer;text-align:left;width:100%}
+.ev-row:hover{border-color:var(--river);border-left-color:var(--c)}
+.ev-row .d{text-align:center;line-height:1}
+.ev-row .d b{display:block;font-family:var(--display);font-weight:800;font-size:1.6rem}
+.ev-row .d span{font-size:.74rem;color:var(--muted)}
+.ev-row .t{display:block;font-weight:700;line-height:1.25}
+.ev-row .meta{display:block;font-size:.86rem;color:var(--muted);margin-top:3px}
+.ev-row .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover}
+
+/* ---- Asociaciones ---- */
+.orgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.org{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.org h3{font-family:var(--display);font-size:1.3rem;margin:0;line-height:1.15}
+.org p{margin:0}
+.type{font-size:.8rem;color:var(--muted);margin:0}
+.org .desc{color:var(--muted);font-size:.94rem}
+.badge{display:inline-block;background:var(--sun);color:var(--sun-ink);font-size:.8rem;font-weight:700;border-radius:999px;padding:2px 10px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0 0 6px;font-size:.94rem}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+
+/* ---- Modal ---- */
+.overlay{position:fixed;inset:0;background:rgba(5,15,20,.55);display:flex;align-items:flex-end;justify-content:center;z-index:70;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (min-width:700px){.overlay{align-items:center}}
+.modal{background:var(--surface);border-radius:22px;max-width:580px;width:100%;max-height:88vh;overflow:auto;padding:24px}
+.modal h2{font-family:var(--display);font-weight:800;font-size:1.9rem;line-height:1.05;margin:8px 0 14px;letter-spacing:-.02em}
+.hero-img{display:block;width:calc(100% + 48px);max-width:none;margin:-24px -24px 18px;max-height:340px;object-fit:cover;border-radius:22px 22px 0 0;opacity:0;transition:opacity .25s}
+.long{white-space:pre-wrap;margin:0 0 18px;max-width:65ch}
+.org-card{background:var(--river-soft);border-radius:14px;padding:14px;margin-bottom:18px;display:flex;flex-direction:column;gap:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--river);color:var(--river-ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+a.btn{color:var(--river-ink)}
+.btn.alt,a.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
+
+/* ---- Área de asociaciones ---- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:20px}
+.card.narrow{max-width:520px;margin-inline:auto}
+.card h2{font-family:var(--display);font-weight:700;font-size:1.45rem;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 18px}
+.sub{font-family:var(--display);font-size:1.1rem;margin:22px 0 6px;display:flex;align-items:center;gap:8px}
+.panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:start}
+@media (max-width:1000px){.panel{grid-template-columns:minmax(0,1fr)}}
+.session{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;color:var(--muted);font-size:.93rem}
+.session b{color:var(--ink)}
+.notice{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.notice.warn{background:var(--warn-bg)}
+.notice.err{background:var(--err-bg)}
+.seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 8px;border-radius:9px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.f{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;min-width:0}
+.f label,.f .label{font-weight:600;font-size:.92rem}
+.hint{font-size:.82rem;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px 12px;width:100%}
+.f textarea{min-height:100px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.row{grid-template-columns:1fr}}
+.fieldset{border:1px solid var(--line);border-radius:14px;padding:12px 14px 0;margin:0 0 14px}
+.fieldset legend{font-weight:700;padding:0 6px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;margin-bottom:16px}
+.check input{margin-top:4px;width:18px;height:18px}
+.img-field{border:2px dashed var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;background:var(--paper)}
+.img-field img{width:100%;max-height:240px;object-fit:cover;border-radius:10px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.file{position:absolute;width:1px;height:1px;opacity:0}
+.msg{font-size:.92rem;margin:10px 0 0;min-height:1.3em}
+.msg.err{color:var(--danger)} .msg.ok{color:var(--ok)}
+.small-btn{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:.86rem;font-weight:600;display:inline-block}
+.small-btn.del{color:var(--danger)} .small-btn.ok{color:var(--ok)}
+.mine{display:flex;flex-direction:column;gap:8px}
+.mine-item,.admin-row{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.admin-row{border-width:1px 0 0;border-radius:0;padding:10px 0}
+.mine-item.past{opacity:.6}
+.mine-item .t,.admin-row .t{font-weight:700;margin:0;line-height:1.25}
+.mine-item .muted,.admin-row .muted{font-size:.85rem}
+.acts{display:flex;gap:6px;flex-shrink:0}
+
+/* ---- Instalar ---- */
+.inst-steps{margin:0 0 20px;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
+.ios-tip{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;gap:10px;align-items:center;max-width:520px;margin:0 auto}
+.ios-tip span{flex:1;font-size:.92rem}
+.ios-tip .x{border:0;background:transparent;font-size:22px;cursor:pointer;color:var(--muted)}
+@media (prefers-reduced-motion: no-preference){.modal{animation:rise .18s ease-out}@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}}
+</style>
 </head>
 <body>
-<header><div class="nav">
-<a class="brand" href="index.html">APOIA+<span>Plataforma de oportunidades</span></a>
-<button class="menuToggle" id="menuToggle" aria-label="Abrir menu">☰</button>
-<nav class="navlinks">
-<a href="index.html" class="active" data-i18n="nav_inicio">Início</a>
-<a href="index.html#servicos" data-i18n="nav_servicos">Serviços</a>
-<a href="cursos.html" data-i18n="nav_cursos">Cursos</a>
-<a href="organizacao.html" data-i18n="nav_organizacoes">Organizações</a>
-<a href="index.html#sobre" data-i18n="nav_sobre">Sobre</a>
+<nav class="nav" id="nav" aria-label="Menú principal">
+  <div class="brand"><img src="icon.png" alt=""><div><b>Apoia+</b><span>Miranda de Ebro</span></div></div>
+  <a href="#inicio" data-route="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Próximos eventos</span></a>
+  <a href="#calendario" data-route="calendario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendario</span></a>
+  <a href="#noticias" data-route="noticias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>Noticias</span></a>
+  <h4>Categorías</h4>
+  <div id="navCats"></div>
+  <h4>Ciudad</h4>
+  <a href="#asociaciones" data-route="asociaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg><span>Asociaciones</span></a>
+  <a href="#publicar" data-route="publicar" class="publish"><span>Área de asociaciones</span></a>
 </nav>
-<select class="lang" id="langSelect" aria-label="Idioma">
-<option value="pt">Português</option>
-<option value="es">Español</option>
-<option value="en">English</option>
-<option value="fr">Français</option>
-<option value="ar">العربية</option>
-</select>
-<div id="authSlot"></div>
-</div></header>
-
-<main id="inicio">
-<section class="hero">
-<div><div class="eyebrow" data-i18n="hero_eyebrow">Uma rede para conectar pessoas e oportunidades</div><h1 data-i18n="hero_title">Encontre apoio, estudos e novas oportunidades.</h1><p data-i18n="hero_desc">Uma plataforma central para pessoas, empresas e organizações. Agende atendimentos e visitas, descubra cursos e mantenha seu perfil sempre atualizado.</p><div class="actions"><a class="btn primary" href="cadastro.html" data-i18n="hero_cta1">Criar meu cadastro</a><a class="btn light" href="cursos.html" data-i18n="hero_cta2">Ver cursos</a></div></div>
-<div class="visual"><div class="card main"><div class="eyebrow" data-i18n="hero_card_title">Próximo atendimento</div><h3 data-i18n="hero_card_sub">Orientação profissional</h3><p style="color:#66756f" data-i18n="hero_card_time">Hoje · 15:30 · Atendimento presencial</p><a class="btn primary" href="agenda.html" data-i18n="hero_card_btn">Ver agenda</a></div><a class="card small" href="perfil.html" style="text-decoration:none;color:inherit;display:block"><div style="display:flex;gap:12px;align-items:center"><div class="avatar">MR</div><div><b data-i18n="hero_profile_label">Meu perfil</b><div style="color:#718079;font-size:13px" data-i18n="hero_profile_sub">Cadastro completo · 92%</div></div></div></a></div>
-</section>
-
-<section class="section" id="servicos"><h2 data-i18n="servicos_title">Uma plataforma para facilitar o acesso</h2><p class="sub" data-i18n="servicos_sub">Tudo organizado em um só lugar.</p><div class="grid">
-<a class="feature" href="agenda.html" style="text-decoration:none;color:inherit"><div class="icon">📅</div><h3 data-i18n="feat_agendar_title">Agendar estudos</h3><p data-i18n="feat_agendar_desc">Escolha um curso, horário e formato de estudo de maneira simples.</p></a>
-<a class="feature" href="agenda.html" style="text-decoration:none;color:inherit"><div class="icon">🤝</div><h3 data-i18n="feat_visitas_title">Marcar visitas</h3><p data-i18n="feat_visitas_desc">Solicite e acompanhe visitas e atendimentos com informações claras.</p></a>
-<a class="feature" href="organizacao.html" style="text-decoration:none;color:inherit"><div class="icon">🏢</div><h3 data-i18n="feat_org_title">Organizações</h3><p data-i18n="feat_org_desc">Empresas e entidades podem criar um perfil e publicar oportunidades.</p></a>
-</div></section>
-
-<section class="section" id="cursos"><h2 data-i18n="cursos_title">Cursos e oportunidades</h2><p class="sub"><span data-i18n="cursos_sub">Exemplo de como as oportunidades poderão aparecer.</span> <a href="cursos.html" style="color:var(--green);font-weight:700" data-i18n="ver_todos">Ver todos →</a></p><div class="courses">
-<a class="course" href="curso-detalhe.html?c=informatica"><div class="cover"></div><div class="coursebody"><span class="tag" data-i18n="filtro_profissionalizante">Profissionalizante</span><h3 data-i18n="curso_informatica_nome">Informática Básica</h3><p data-i18n="curso_informatica_desc">Curso introdutório para desenvolver competências digitais.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
-<a class="course" href="curso-detalhe.html?c=trabalho"><div class="cover" style="background:linear-gradient(135deg,#335f9d,#8fb5e2)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_empregabilidade">Empregabilidade</span><h3 data-i18n="curso_trabalho_nome">Preparação para o Trabalho</h3><p data-i18n="curso_trabalho_desc">Orientações práticas para currículo e entrevistas.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
-<a class="course" href="curso-detalhe.html?c=espanhol"><div class="cover" style="background:linear-gradient(135deg,#b37a32,#e9c47d)"></div><div class="coursebody"><span class="tag" data-i18n="filtro_idiomas">Idiomas</span><h3 data-i18n="curso_espanhol_nome">Espanhol para Iniciantes</h3><p data-i18n="curso_espanhol_desc">Primeiros passos para comunicação no dia a dia.</p><div class="row"><span class="price" data-i18n="tag_gratuito">Gratuito</span><span class="btn light" data-i18n="btn_detalhes">Detalhes</span></div></div></a>
-</div></section>
-
-<section class="section" id="organizacoes"><div class="cta"><div><h2 style="color:white" data-i18n="cta_title">Sua organização também pode participar</h2><p data-i18n="cta_desc">Cadastre sua empresa ou organização e disponibilize cursos, formações e oportunidades para a comunidade.</p></div><a class="btn" style="background:white;color:var(--green)" href="organizacao.html" data-i18n="cta_btn">Cadastrar organização</a></div></section>
-
-<section class="section" id="sobre"><h2 data-i18n="sobre_title">Perfil do participante</h2><p class="sub" data-i18n="sobre_sub">No cadastro, a pessoa terá um perfil padronizado e fácil de atualizar.</p><div class="grid">
-<div class="feature"><div class="avatar">JP</div><h3 data-i18n="feat_foto_title">Foto de perfil</h3><p data-i18n="feat_foto_desc">Upload com padrão visual único para manter a plataforma organizada.</p></div>
-<div class="feature"><div class="icon">🪪</div><h3 data-i18n="feat_dados_title">Dados essenciais</h3><p data-i18n="feat_dados_desc">Nome, telefone, data de nascimento e outras informações necessárias.</p></div>
-<div class="feature"><div class="icon">🌍</div><h3 data-i18n="feat_multilang_title">Multilíngue</h3><p data-i18n="feat_multilang_desc">Português, espanhol, inglês, francês e árabe, com interface preparada para expansão.</p></div>
-</div></section>
-</main>
-
-<footer class="footer"><div class="footerin"><div><b>APOIA+</b><div style="margin-top:8px;font-size:13px" data-i18n="footer_desc">Plataforma de oportunidades e apoio.</div></div><div style="font-size:13px"><span data-i18n="footer_links">Privacidade · Termos · Ajuda</span> · <a href="admin.html" style="color:inherit;text-decoration:underline">Admin</a></div></div></footer>
+<div class="scrim" data-act="closeNav"></div>
+<div class="main">
+  <header class="topbar"><div class="in">
+    <button class="menu-btn" data-act="openNav" aria-label="Abrir menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <h1 id="pageTitle">Agenda</h1>
+    <button class="install-btn" data-install="1" hidden>Instalar app</button>
+  </div></header>
+  <div class="demo-bar"><div class="in"><span><b>Versión de demostración.</b> Entra en el área de asociaciones con <b>demo@apoia.mais</b> y la contraseña <b>demo123</b>.</span><button class="small-btn" onclick="apoiaDemoReset()">Reiniciar demo</button></div></div>
+  <div class="status-wrap" id="statusWrap"><div id="status" class="notice" hidden></div></div>
+  <main id="view"></main>
+</div>
+<div id="modalRoot"></div>
+<div class="ios-tip" id="iosTip" role="status" hidden><span><b>Instala Apoia+</b> en tu iPhone para tenerla como una app.</span><button class="btn" data-install="1" style="padding:8px 12px">Cómo</button><button class="x" data-tipclose="1" aria-label="Cerrar">×</button></div>
+<script src="demo-backend.js"></script>
 <script src="app.js"></script>
-</body></html>
+<script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
+<script>
+(function(){
+  var deferred=null, ua=navigator.userAgent||"";
+  var isIOS=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  var isSafari=isIOS&&!/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+  function installed(){return (window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true}
+  function steps(){
+    if(isIOS&&!isSafari) return '<ol class="inst-steps"><li>Copia el enlace de esta página.</li><li>Ábrelo en <b>Safari</b>. En iPhone solo Safari permite instalar apps web.</li><li>Pulsa «Instalar app» otra vez.</li></ol>';
+    if(isIOS) return '<ol class="inst-steps"><li>Pulsa <b>Compartir</b> en Safari (o el menú <b>⋯</b> y luego Compartir).</li><li>Desliza hacia arriba y elige <b>Añadir a pantalla de inicio</b>.</li><li>Pulsa <b>Añadir</b>.</li></ol>';
+    return '<ol class="inst-steps"><li>Abre esta página en <b>Chrome</b>.</li><li>Pulsa el menú <b>⋮</b>.</li><li>Elige <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</li></ol>';
+  }
+  function show(){document.getElementById("modalRoot").innerHTML='<div class="overlay" data-close="1"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><h2 id="mTitle">Instala Apoia+</h2><p class="lead">Tendrás la agenda en tu pantalla de inicio, a pantalla completa.</p>'+steps()+'<div class="actions"><button class="btn" data-close="1">Entendido</button></div></div></div>'}
+  function update(){
+    var s=!installed();
+    document.querySelectorAll(".install-btn").forEach(function(b){b.hidden=!s});
+    var tip=document.getElementById("iosTip"),d=false;try{d=localStorage.getItem("apoia-ios-tip")==="1"}catch(e){}
+    tip.hidden=!(s&&isIOS&&!d);
+  }
+  addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;update()});
+  addEventListener("appinstalled",function(){deferred=null;update()});
+  document.addEventListener("click",function(e){
+    if(e.target.closest("[data-install]")){e.preventDefault();if(deferred){deferred.prompt();deferred=null}else show();return}
+    if(e.target.closest("[data-tipclose]")){try{localStorage.setItem("apoia-ios-tip","1")}catch(x){}update()}
+  });
+  update();
+})();
+</script>
+</body>
+</html>

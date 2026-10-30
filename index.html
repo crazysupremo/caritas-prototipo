@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Apoia+</title>
+<title>Apoia+ · Demo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Agenda de eventos y noticias de las asociaciones de Miranda de Ebro.">
 <meta name="theme-color" content="#0C5A69">
@@ -264,15 +264,13 @@ a.btn{color:var(--river-ink)}
     <h1 id="pageTitle">Agenda</h1>
     <button class="install-btn" data-install="1" hidden>Instalar app</button>
   </div></header>
-  
+  <div class="demo-bar"><div class="in"><span><b>Versión de demostración.</b> Entra en el área de asociaciones con <b>demo@apoia.mais</b> y la contraseña <b>demo123</b>.</span><button class="small-btn" onclick="apoiaDemoReset()">Reiniciar demo</button></div></div>
   <div class="status-wrap" id="statusWrap"><div id="status" class="notice" hidden></div></div>
   <main id="view"></main>
 </div>
 <div id="modalRoot"></div>
 <div class="ios-tip" id="iosTip" role="status" hidden><span><b>Instala Apoia+</b> en tu iPhone para tenerla como una app.</span><button class="btn" data-install="1" style="padding:8px 12px">Cómo</button><button class="x" data-tipclose="1" aria-label="Cerrar">×</button></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="demo-backend.js"></script>
 <script src="app.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
 <script>

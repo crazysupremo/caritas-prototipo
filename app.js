@@ -94,8 +94,17 @@ function onRoute(){
   $("pageTitle").textContent=title;
   render(); window.scrollTo(0,0);
 }
+function isWide(){return window.matchMedia("(min-width:901px)").matches}
 function openNav(){document.body.classList.add("nav-open")}
 function closeNav(){document.body.classList.remove("nav-open")}
+function toggleNav(){
+  if(isWide()){
+    const c=!document.body.classList.contains("nav-collapsed");
+    document.body.classList.toggle("nav-collapsed",c);
+    try{localStorage.setItem("apoia-nav",c?"cerrado":"abierto")}catch(e){}
+  } else document.body.classList.toggle("nav-open");
+}
+try{if(localStorage.getItem("apoia-nav")==="cerrado")document.body.classList.add("nav-collapsed")}catch(e){}
 function renderNav(){
   const counts={}; upcoming().forEach(e=>{counts[e.categoria]=(counts[e.categoria]||0)+1});
   $("navCats").innerHTML=CATS.filter(c=>c.id!=="otros"||counts.otros).map(c=>
@@ -534,6 +543,7 @@ document.addEventListener("click",ev=>{
   if(t.matches(".nav a")) {closeNav();return}
   const a=t.dataset.act;
   if(a==="openNav") return openNav();
+  if(a==="toggleNav") return toggleNav();
   if(a==="closeNav") return closeNav();
   if(a==="prev"){S.month=new Date(S.month.getFullYear(),S.month.getMonth()-1,1);return fillCalendario()}
   if(a==="next"){S.month=new Date(S.month.getFullYear(),S.month.getMonth()+1,1);return fillCalendario()}

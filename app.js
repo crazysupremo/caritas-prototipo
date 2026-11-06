@@ -27,7 +27,8 @@ const CATS = [
 ];
 const CAT = Object.fromEntries(CATS.map(c=>[c.id,c]));
 const ASSOC_TYPES = ["Cultural","Deportiva","Vecinal","Juvenil","De mayores","Social o solidaria","Educativa","Otra"];
-const PAGES = {inicio:"Agenda", calendario:"Calendario", noticias:"Noticias", asociaciones:"Asociaciones", publicar:"Área de asociaciones"};
+const PAGES = {inicio:"Agenda", mapa:"Mapa de eventos", calendario:"Calendario", noticias:"Noticias", asociaciones:"Asociaciones", publicar:"Área de asociaciones"};
+const MIRANDA = [42.6858, -2.9466];
 
 /* ---------- Estado ---------- */
 const S = {
@@ -35,7 +36,7 @@ const S = {
   assocs:new Map(), events:[], news:[], ready:{a:false,e:false,n:false},
   route:"inicio", month:firstOfMonth(new Date()), selected:ymd(new Date()), q:"",
   authMode:"login", editingProfile:false, kind:"evento", editId:null, pendingDel:null, busy:false,
-  panelKey:"", formKey:"", img:null, imgCache:new Map()
+  panelKey:"", formKey:"", img:null, logo:null, loc:null, imgCache:new Map(), mapCat:"todas"
 };
 
 /* ---------- Utilidades ---------- */
@@ -55,6 +56,18 @@ function $(id){return document.getElementById(id)}
 function val(id){const el=$(id);return el?el.value.trim():""}
 function setMsg(id,t,k){const m=$(id);if(m){m.textContent=t;m.className="msg"+(k?" "+k:"")}}
 function today(){return ymd(new Date())}
+function coords(e){return e&&typeof e.lat==="number"&&typeof e.lng==="number"&&isFinite(e.lat)&&isFinite(e.lng)?[e.lat,e.lng]:null}
+function initials(n){return String(n||"?").replace(/^(Asociaci[oó]n|Club|AMPA)\s+/i,"").split(/\s+/).filter(w=>w&&!/^(de|del|la|las|el|los|y|e|en)$/i.test(w)).slice(0,2).map(w=>w[0]).join("").toUpperCase()||"?"}
+function logoHtml(a,cls){
+  cls=cls||"logo";
+  return a.logo?`<img class="${cls}" alt="Logo de ${esc(a.nombre)}" data-logo="${esc(a.id)}">`:`<span class="${cls} ph" aria-hidden="true">${esc(initials(a.nombre))}</span>`;
+}
+function directionsUrl(e){
+  const c=coords(e);
+  if(c) return "https://www.google.com/maps/dir/?api=1&destination="+c[0]+","+c[1];
+  const q=[e.direccion||e.lugar,"Miranda de Ebro"].filter(Boolean).join(", ");
+  return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+}
 function loaded(){return S.ready.a&&S.ready.e&&S.ready.n}
 
 /* ---------- Datos derivados ---------- */
@@ -88,7 +101,7 @@ function go(r){
   if(location.hash!=="#"+r) location.hash=r; else onRoute();
 }
 function onRoute(){
-  S.route=routeFromHash(); S.panelKey=""; S.formKey=""; closeNav();
+  S.route=routeFromHash(); S.panelKey=""; S.formKey=""; closeNav(); clearTimeout(S.qT);
   document.querySelectorAll(".nav a[data-route]").forEach(a=>a.setAttribute("aria-current",a.dataset.route===S.route?"page":"false"));
   const title=S.route.startsWith("cat-")?CAT[S.route.slice(4)].name:PAGES[S.route];
   $("pageTitle").textContent=title;
@@ -124,7 +137,7 @@ function eventCard(e){
       <span class="cat-label" style="--c:${c.color}">${esc(c.name)}</span>
       <span class="t">${esc(e.titulo)}</span>
       <span class="meta">${esc(when)}${e.lugar?" · "+esc(e.lugar):""}</span>
-      <span class="by">${esc(e.org.nombre)}</span>
+      <span class="by">${logoHtml(e.org,"logo xs")}<span>${esc(e.org.nombre)}</span></span>
     </span>
   </button>`;
 }
@@ -231,10 +244,11 @@ function fillAsociaciones(){
   const l=[...S.assocs.values()].filter(a=>a.estado==="aprobada"&&a.nombre).sort((a,b)=>a.nombre.localeCompare(b.nombre,"es"));
   box.innerHTML=l.length?`<div class="orgs">${l.map(a=>{
     const n=S.events.filter(e=>e.asociacionId===a.id&&(e.fechaFin||e.fecha)>=t).length, web=safeUrl(a.web);
-    return `<article class="org"><p class="type">Asociación ${esc((a.tipo||"").toLowerCase())}</p><h3>${esc(a.nombre)}</h3>
+    return `<article class="org"><div class="org-head">${logoHtml(a,"logo lg")}<div><p class="type">Asociación ${esc((a.tipo||"").toLowerCase())}</p><h3>${esc(a.nombre)}</h3></div></div>
       ${a.descripcion?`<p class="desc">${esc(a.descripcion)}</p>`:""}
       <dl class="facts">${a.direccion?`<dt>Dirección</dt><dd>${esc(a.direccion)}</dd>`:""}${a.telefono?`<dt>Teléfono</dt><dd>${esc(a.telefono)}</dd>`:""}${a.email?`<dt>Email</dt><dd>${esc(a.email)}</dd>`:""}${web?`<dt>Web</dt><dd><a href="${esc(web)}" target="_blank" rel="noopener">${esc(a.web)}</a></dd>`:""}</dl>
       <p>${n?`<span class="badge">${n} evento${n>1?"s":""} próximo${n>1?"s":""}</span>`:`<span class="muted">Sin eventos próximos</span>`}</p></article>`}).join("")}</div>`:empty("Aún no hay asociaciones registradas.");
+  hydrateImages(box);
 }
 
 /* ---------- Detalle (modal) ---------- */
@@ -245,15 +259,20 @@ function openEvent(id){
   modal(`${e.img?`<img class="hero-img" alt="${esc(e.titulo)}" data-img="${esc(e.id)}">`:""}
     <span class="cat-label" style="--c:${c.color}">${esc(c.name)}</span>
     <h2 id="mTitle">${esc(e.titulo)}</h2>
-    <dl class="facts"><dt>Cuándo</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(e.hora?(e.hora+(e.horaFin?" – "+e.horaFin:"")):"Todo el día")}</dd>${e.lugar?`<dt>Dónde</dt><dd>${esc(e.lugar)}</dd>`:""}<dt>Precio</dt><dd>${esc(e.precio||"Gratis")}</dd></dl>
+    <dl class="facts"><dt>Cuándo</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(e.hora?(e.hora+(e.horaFin?" – "+e.horaFin:"")):"Todo el día")}</dd>${e.lugar?`<dt>Dónde</dt><dd>${esc(e.lugar)}</dd>`:""}<dt>Precio</dt><dd>${esc(e.precio||"Gratis")}</dd>${e.direccion?`<dt>Dirección</dt><dd>${esc(e.direccion)}</dd>`:""}</dl>
+    ${coords(e)?`<div class="map small" id="detailMap" aria-label="Mapa del lugar del evento"></div>`:""}
+    ${(coords(e)||e.lugar||e.direccion)?`<div class="actions loc-actions"><a class="btn" id="dirLink" href="${esc(directionsUrl(e))}" target="_blank" rel="noopener">Cómo llegar</a>${coords(e)?`<a class="btn alt" href="#mapa" data-close="1" data-mapfocus="${esc(e.id)}">Ver en el mapa de eventos</a>`:""}</div>`:""}
     ${e.descripcion?`<p class="long">${esc(e.descripcion)}</p>`:""}
-    <div class="org-card"><span class="muted">Organiza</span><b>${esc(o.nombre)}</b><span>${[o.telefono,o.email].filter(Boolean).map(esc).join(" · ")}</span>${web?`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(o.web)}</a>`:""}</div>
+    <div class="org-card"><div class="org-row">${logoHtml(o,"logo md")}<div><span class="muted">Organiza</span><b>${esc(o.nombre)}</b></div></div><span>${[o.telefono,o.email].filter(Boolean).map(esc).join(" · ")}</span>${web?`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(o.web)}</a>`:""}</div>
     <div class="actions">
       ${link?`<a class="btn" href="${esc(link)}" target="_blank" rel="noopener">Más información o entradas</a>`:""}
       <a class="btn alt" href="${esc(gcalUrl(e,o))}" target="_blank" rel="noopener">Añadir a Google Calendar</a>
       <button class="btn alt" data-close="1">Cerrar</button>
     </div>`);
+  const pos=coords(e);
+  if(pos){const m=makeMap("detailMap",pos,16);if(m)L.marker(pos,{icon:pinIcon(c2color(e)),keyboard:false}).addTo(m)}
 }
+function c2color(e){return (CAT[e.categoria]||CAT.otros).color}
 function openNews(id){
   const n=pubNews().find(x=>x.id===id); if(!n) return;
   modal(`${n.img?`<img class="hero-img" alt="${esc(n.titulo)}" data-img="${esc(n.id)}">`:""}
@@ -267,7 +286,7 @@ function modal(inner){
   hydrateImages($("modalRoot"));
   const f=$("modalRoot").querySelector(".modal button, .modal a"); if(f) f.focus();
 }
-function closeModal(){$("modalRoot").innerHTML=""}
+function closeModal(){dropMap("detailMap");$("modalRoot").innerHTML=""}
 function stamp(d,t){return d.replace(/-/g,"")+(t?"T"+t.replace(":","")+"00":"")}
 function gcalUrl(e,o){
   const end=e.fechaFin||e.fecha; let a,b;
@@ -283,17 +302,27 @@ function loadImage(item){
   const p=S.db.collection("imagenes").doc(item.id).get().then(s=>{const u=s.exists?s.data().data:null;return(typeof u==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u))?u:null}).catch(()=>{S.imgCache.delete(k);return null});
   S.imgCache.set(k,p); return p;
 }
+function loadLogo(a){
+  if(!a||!a.logo||!S.db) return Promise.resolve(null);
+  const k="logo|"+a.id+"|"+a.logo; if(S.imgCache.has(k)) return S.imgCache.get(k);
+  const p=S.db.collection("logos").doc(a.id).get().then(s=>{const u=s.exists?s.data().data:null;return(typeof u==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u))?u:null}).catch(()=>{S.imgCache.delete(k);return null});
+  S.imgCache.set(k,p); return p;
+}
 function hydrateImages(root){
   (root||document).querySelectorAll("img[data-img]:not([src])").forEach(img=>{
     loadImage(findItem(img.dataset.img)).then(u=>{if(u){img.src=u;img.classList.add("in")}else img.remove()});
   });
+  (root||document).querySelectorAll("img[data-logo]:not([src])").forEach(img=>{
+    const a=S.assocs.get(img.dataset.logo);
+    loadLogo(a).then(u=>{if(u){img.src=u;img.classList.add("in")}else{const ph=document.createElement("span");ph.className=img.className.replace(" in","")+" ph";ph.textContent=initials(a&&a.nombre);img.replaceWith(ph)}});
+  });
 }
-function compressImage(file){
+function compressImage(file,maxSide,maxLen){
   return new Promise((res,rej)=>{
     const url=URL.createObjectURL(file), im=new Image();
-    im.onload=()=>{URL.revokeObjectURL(url);let w=im.naturalWidth,h=im.naturalHeight,max=1200,q=.8,out="";
-      for(let t=0;t<9;t++){const sc=Math.min(1,max/Math.max(w,h)),cv=document.createElement("canvas");cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);out=cv.toDataURL("image/jpeg",q);if(out.length<300000)return res(out);if(q>.55)q-=.1;else max=Math.round(max*.8)}
-      out.length<390000?res(out):rej(new Error("big"))};
+    im.onload=()=>{URL.revokeObjectURL(url);let w=im.naturalWidth,h=im.naturalHeight,max=maxSide||1200,q=.8,out="",lim=maxLen||300000;
+      for(let t=0;t<9;t++){const sc=Math.min(1,max/Math.max(w,h)),cv=document.createElement("canvas");cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);out=cv.toDataURL("image/jpeg",q);if(out.length<lim)return res(out);if(q>.55)q-=.1;else max=Math.round(max*.8)}
+      out.length<lim*1.3?res(out):rej(new Error("big"))};
     im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("read"))}; im.src=url;
   });
 }
@@ -308,6 +337,106 @@ async function onPickImage(file){
   S.img={loading:true}; renderImgField();
   try{S.img={url:await compressImage(file),changed:true};setMsg("formMsg","")}catch(e){S.img=null;setMsg("formMsg","No se ha podido leer esa imagen. Prueba con otra.","err")}
   renderImgField();
+}
+
+function renderLogoField(){
+  const box=$("logoField"); if(!box) return; const im=S.logo;
+  box.innerHTML=(im&&im.url?`<img src="${im.url}" alt="Vista previa del logo" class="logo-preview">`:`<span class="hint">${im&&im.loading?"Cargando logo…":"Sin logo. Se mostrarán las iniciales."}</span>`)
+    +`<div class="row-btns"><label class="small-btn" for="p_logo">${im&&im.url?"Cambiar logo":"Subir logo o foto"}</label>${im&&im.url?`<button class="small-btn del" type="button" data-act="removeLogo">Quitar</button>`:""}</div><input id="p_logo" class="file" type="file" accept="image/*">`;
+}
+async function onPickLogo(file){
+  if(!file) return;
+  if(!/^image\//.test(file.type)){setMsg("profileMsg","Elige un archivo de imagen.","err");return}
+  S.logo={loading:true}; renderLogoField();
+  try{S.logo={url:await compressImage(file,400,120000),changed:true};setMsg("profileMsg","")}catch(e){S.logo=null;setMsg("profileMsg","No se ha podido leer esa imagen. Prueba con otra.","err")}
+  renderLogoField();
+}
+
+/* ---------- Mapas ---------- */
+const maps={};
+function haveMap(){return typeof window.L!=="undefined"&&typeof L.map==="function"}
+function dropMap(id){if(maps[id]){try{maps[id].remove()}catch(e){}delete maps[id]}}
+function makeMap(id,center,zoom){
+  const el=$(id); if(!el) return null;
+  dropMap(id);
+  const old=el.nextElementSibling; if(old&&old.classList.contains("map-note")) old.remove();
+  if(!haveMap()){el.classList.add("map-off");el.innerHTML='<p>El mapa no está disponible ahora. Comprueba la conexión a internet.</p>';return null}
+  const m=L.map(el,{scrollWheelZoom:false,tap:true}).setView(center,zoom);
+  const t=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(m);
+  let warned=false;
+  t.on("tileerror",()=>{if(warned)return;warned=true;const n=document.createElement("p");n.className="map-note";n.textContent="No se han podido cargar las calles del mapa. El marcador y «Cómo llegar» siguen funcionando.";el.after(n)});
+  maps[id]=m; setTimeout(()=>{try{m.invalidateSize()}catch(e){}},80);
+  return m;
+}
+function pinIcon(color){return L.divIcon({className:"pin-wrap",html:`<span class="pin" style="--c:${color}"></span>`,iconSize:[28,28],iconAnchor:[14,30],popupAnchor:[0,-28]})}
+
+/* Mapa en el formulario del evento */
+function initFormMap(e){
+  const c=coords(e); S.loc=c?{lat:c[0],lng:c[1]}:null; S.formMarker=null;
+  const m=makeMap("formMap",c||MIRANDA,c?16:14);
+  if(m) m.on("click",ev=>{setLoc(ev.latlng.lat,ev.latlng.lng,false)});
+  showLoc(false);
+}
+function setLoc(lat,lng,fly){S.loc={lat:+(+lat).toFixed(6),lng:+(+lng).toFixed(6)};showLoc(fly)}
+function showLoc(fly,msg,err){
+  if($("e_lat")){$("e_lat").value=S.loc?S.loc.lat:"";$("e_lng").value=S.loc?S.loc.lng:""}
+  const m=maps.formMap;
+  if(m){
+    if(S.formMarker){m.removeLayer(S.formMarker);S.formMarker=null}
+    if(S.loc){
+      S.formMarker=L.marker([S.loc.lat,S.loc.lng],{icon:pinIcon((CAT[val("e_cat")]||CAT.otros).color),draggable:true}).addTo(m);
+      S.formMarker.on("dragend",ev=>{const p=ev.target.getLatLng();setLoc(p.lat,p.lng,false)});
+      if(fly) m.setView([S.loc.lat,S.loc.lng],16);
+    }
+  }
+  const i=$("locInfo"); if(i){i.className="hint"+(err?" err":"");i.textContent=msg||(S.loc?`Ubicación marcada (${S.loc.lat.toFixed(5)}, ${S.loc.lng.toFixed(5)}). Puedes arrastrar el marcador para ajustarla.`:"Sin ubicación. Toca el mapa o busca la dirección.")}
+  const b=$("clearLocBtn"); if(b) b.hidden=!S.loc;
+}
+async function geocode(){
+  const q=val("e_dir")||val("e_lugar");
+  if(!q) return showLoc(false,"Escribe la dirección o el lugar para buscarlo.",true);
+  showLoc(false,"Buscando la dirección…");
+  try{
+    const r=await fetch("https://nominatim.openstreetmap.org/search?"+new URLSearchParams({format:"json",limit:"1",countrycodes:"es",viewbox:"-3.05,42.73,-2.86,42.64",bounded:"0",q:q+", Miranda de Ebro"}),{headers:{"Accept-Language":"es"}});
+    if(!r.ok) throw new Error("http");
+    const j=await r.json();
+    if(!Array.isArray(j)||!j.length) return showLoc(false,"No hemos encontrado esa dirección. Toca el mapa para marcar el sitio.",true);
+    setLoc(+j[0].lat,+j[0].lon,true);
+  }catch(e){showLoc(false,"No se ha podido buscar ahora. Toca el mapa para marcar el sitio.",true)}
+}
+
+/* Página «Mapa de eventos» */
+function viewMapa(){
+  return `<section class="intro"><h2>Mapa de eventos</h2><p>Dónde son los próximos eventos. Toca un marcador para ver los detalles.</p></section>
+    <div class="filters" id="mapFilters"></div>
+    <div class="map big" id="allMap" aria-label="Mapa con los próximos eventos"></div>
+    <h3 class="map-list-title" id="mapCount"></h3>
+    <div class="rows" id="mapList"></div>`;
+}
+function fillMapa(){
+  if(!$("allMap")) return;
+  const all=[{id:"todas",name:"Todas",color:null}].concat(CATS.filter(c=>c.id!=="otros"));
+  $("mapFilters").innerHTML=all.map(c=>`<button class="chip" data-mapcat="${c.id}" aria-pressed="${S.mapCat===c.id}">${c.color?`<span class="dot" style="background:${c.color}"></span>`:""}${esc(c.name)}</button>`).join("");
+  const list=upcoming().filter(e=>coords(e)&&(S.mapCat==="todas"||e.categoria===S.mapCat));
+  const sinLoc=upcoming().filter(e=>!coords(e)).length;
+  let m=maps.allMap;
+  if(!m||m.getContainer()!==$("allMap")){m=makeMap("allMap",MIRANDA,14);S.mapLayer=null;S.mapFitted=false}
+  if(m){
+    if(S.mapLayer) S.mapLayer.clearLayers(); else S.mapLayer=L.layerGroup().addTo(m);
+    list.forEach(e=>{
+      const box=document.createElement("div"); box.className="pop";
+      const d=parse(e.fecha);
+      box.innerHTML=`<b>${esc(e.titulo)}</b><span>${esc(d.getDate()+" "+fShort.format(d))}${e.hora?" · "+esc(e.hora):""}${e.lugar?" · "+esc(e.lugar):""}</span>`;
+      const btn=document.createElement("button"); btn.className="small-btn"; btn.type="button"; btn.textContent="Ver evento";
+      btn.addEventListener("click",()=>openEvent(e.id)); box.appendChild(btn);
+      L.marker(coords(e),{icon:pinIcon(c2color(e)),title:e.titulo}).bindPopup(box).addTo(S.mapLayer);
+    });
+    if(S.focusId){const f=list.find(x=>x.id===S.focusId);if(f){m.setView(coords(f),17);S.mapFitted=true}S.focusId=null}
+    if(!S.mapFitted&&list.length){m.fitBounds(L.latLngBounds(list.map(coords)),{padding:[40,40],maxZoom:16});S.mapFitted=true}
+  }
+  $("mapCount").textContent=loaded()?(list.length?`${list.length} evento${list.length>1?"s":""} en el mapa`:"No hay eventos con ubicación en esta categoría"):"Cargando…";
+  $("mapList").innerHTML=list.map(eventRow).join("")+(sinLoc&&S.mapCat==="todas"?`<p class="muted">${sinLoc} evento${sinLoc>1?"s":""} sin ubicación en el mapa.</p>`:"");
+  hydrateImages($("mapList"));
 }
 
 /* ---------- Acceso de asociaciones ---------- */
@@ -395,6 +524,7 @@ function renderProfileCard(){
     if(el.querySelector("#profileForm")) return;
     el.innerHTML=`<h2>Datos de la asociación</h2><p class="lead">Aparecen junto a cada evento y en el listado de asociaciones.</p>
     <form id="profileForm" novalidate>
+      <div class="f"><span class="label">Logo o foto de la asociación</span><div class="img-field" id="logoField"></div><span class="hint">Se ve en el listado de asociaciones y en vuestros eventos.</span></div>
       <div class="f"><label for="p_nombre">Nombre</label><input id="p_nombre" maxlength="90" value="${esc(a.nombre)}"></div>
       <div class="row"><div class="f"><label for="p_tipo">Tipo</label><select id="p_tipo">${ASSOC_TYPES.map(t=>`<option ${a.tipo===t?"selected":""}>${t}</option>`).join("")}</select></div>
       <div class="f"><label for="p_reg">Nº de registro</label><input id="p_reg" maxlength="40" value="${esc(a.registro||"")}"></div></div>
@@ -405,13 +535,16 @@ function renderProfileCard(){
       <div class="f"><label for="p_web">Web o red social</label><input id="p_web" maxlength="150" value="${esc(a.web||"")}"></div>
       <div class="actions"><button class="btn" type="submit">Guardar</button><button class="btn alt" type="button" data-act="cancelProfile">Cancelar</button></div>
       <p class="msg" id="profileMsg" role="status"></p></form>`;
+    S.logo=a.logo?{loading:true}:null; renderLogoField();
+    if(a.logo) loadLogo(a).then(u=>{if(S.editingProfile&&S.logo&&!S.logo.changed){S.logo=u?{url:u}:null;renderLogoField()}});
     return;
   }
   const web=safeUrl(a.web);
-  el.innerHTML=`<p class="type">Asociación ${esc((a.tipo||"").toLowerCase())} · Reg. ${esc(a.registro||"—")}</p><h2>${esc(a.nombre)}</h2>
+  el.innerHTML=`<div class="org-head">${logoHtml(a,"logo lg")}<div><p class="type">Asociación ${esc((a.tipo||"").toLowerCase())} · Reg. ${esc(a.registro||"—")}</p><h2>${esc(a.nombre)}</h2></div></div>
     ${a.descripcion?`<p class="lead">${esc(a.descripcion)}</p>`:`<p class="lead">Añade una descripción y datos de contacto para que la gente os encuentre.</p>`}
     <dl class="facts">${a.direccion?`<dt>Sede</dt><dd>${esc(a.direccion)}</dd>`:""}${a.telefono?`<dt>Teléfono</dt><dd>${esc(a.telefono)}</dd>`:""}${a.email?`<dt>Email</dt><dd>${esc(a.email)}</dd>`:""}${web?`<dt>Web</dt><dd>${esc(a.web)}</dd>`:""}</dl>
-    <div class="actions"><button class="btn alt" data-act="editProfile">Editar datos</button></div>`;
+    <div class="actions"><button class="btn alt" data-act="editProfile">Editar datos y logo</button></div>`;
+  hydrateImages(el);
 }
 function renderPubCol(){
   const col=$("pubCol"), a=myAssoc(); if(!col) return;
@@ -424,6 +557,7 @@ function renderPubCol(){
       ${S.kind==="evento"?eventForm(editing):newsForm(editing)}</div>
       <div class="card"><h2>${S.kind==="evento"?"Tus eventos":"Tus noticias"}</h2><div class="mine" id="mineList"></div></div>`;
     S.formKey=fk; S.img=editing&&editing.img?{loading:true}:null; renderImgField();
+    if(S.kind==="evento") initFormMap(editing); else dropMap("formMap");
     if(editing&&editing.img) loadImage(editing).then(u=>{if(S.editId===editing.id&&S.img&&!S.img.changed){S.img=u?{url:u}:null;renderImgField()}});
   }
   const t=today();
@@ -448,7 +582,13 @@ function eventForm(e){
     </fieldset>
     <div class="row"><div class="f"><label for="e_cat">Categoría</label><select id="e_cat">${CATS.map(c=>`<option value="${c.id}" ${e.categoria===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="f"><label for="e_precio">Precio</label><input id="e_precio" maxlength="60" value="${esc(e.precio||"")}" placeholder="Gratis, 10 €…"></div></div>
-    <div class="f"><label for="e_lugar">Lugar</label><input id="e_lugar" maxlength="120" value="${esc(e.lugar||"")}"></div>
+    <fieldset class="fieldset"><legend>Lugar y ubicación</legend>
+      <div class="f"><label for="e_lugar">Nombre del lugar</label><input id="e_lugar" maxlength="120" value="${esc(e.lugar||"")}" placeholder="Ej.: Casa de Cultura"></div>
+      <div class="f"><label for="e_dir">Dirección</label><div class="search-row"><input id="e_dir" maxlength="150" value="${esc(e.direccion||"")}" placeholder="Ej.: Calle Real Aquende, 10"><button class="small-btn" type="button" data-act="geocode">Buscar en el mapa</button></div></div>
+      <div class="map" id="formMap" aria-label="Mapa para marcar el lugar del evento"></div>
+      <input type="hidden" id="e_lat" value="${esc(coords(e)?e.lat:"")}"><input type="hidden" id="e_lng" value="${esc(coords(e)?e.lng:"")}">
+      <div class="loc-row"><span class="hint" id="locInfo"></span><button class="small-btn del" type="button" id="clearLocBtn" data-act="clearLoc" hidden>Quitar ubicación</button></div>
+    </fieldset>
     <div class="f"><label for="e_link">Enlace para más información o entradas</label><input id="e_link" maxlength="300" value="${esc(e.enlace||"")}"></div>
     <div class="actions"><button class="btn" type="submit">${e.id?"Guardar evento":"Publicar evento"}</button>${e.id?`<button class="btn alt" type="button" data-act="cancelEdit">Cancelar</button>`:""}</div>
     <p class="msg" id="formMsg" role="status"></p></form>`;
@@ -477,8 +617,14 @@ function renderAdmin(){
 /* ---------- Guardar ---------- */
 async function saveProfile(){
   const nombre=val("p_nombre"); if(!nombre) return setMsg("profileMsg","Escribe el nombre de la asociación.","err");
+  if(S.logo&&S.logo.loading) return setMsg("profileMsg","Espera a que termine de cargar el logo.","err");
+  const uid=S.user.uid, a=myAssoc()||{};
+  const data={nombre,tipo:val("p_tipo"),registro:val("p_reg"),descripcion:val("p_desc"),direccion:val("p_dir"),telefono:val("p_tel"),email:val("p_mail"),web:val("p_web"),actualizado:new Date().toISOString()};
   S.busy=true;setMsg("profileMsg","Guardando…");
-  try{await S.db.collection("asociaciones").doc(S.user.uid).update({nombre,tipo:val("p_tipo"),registro:val("p_reg"),descripcion:val("p_desc"),direccion:val("p_dir"),telefono:val("p_tel"),email:val("p_mail"),web:val("p_web"),actualizado:new Date().toISOString()});S.editingProfile=false;S.panelKey=""}
+  try{
+    if(S.logo&&S.logo.changed&&S.logo.url){setMsg("profileMsg","Subiendo logo…");await S.db.collection("logos").doc(uid).set({data:S.logo.url,asociacionId:uid});data.logo=Date.now().toString(36);S.imgCache.set("logo|"+uid+"|"+data.logo,Promise.resolve(S.logo.url))}
+    else if(!S.logo&&a.logo){await S.db.collection("logos").doc(uid).delete().catch(()=>{});data.logo=""}
+    await S.db.collection("asociaciones").doc(uid).update(data);S.editingProfile=false;S.panelKey="";S.logo=null}
   catch(e){setMsg("profileMsg",authErr(e),"err")}
   S.busy=false; render();
 }
@@ -490,7 +636,13 @@ async function savePub(){
     if(!titulo) return setMsg("formMsg","Escribe el título del evento.","err");
     if(!fecha) return setMsg("formMsg","Elige la fecha del evento.","err");
     if(fin&&fin<fecha) return setMsg("formMsg","La fecha de fin no puede ser anterior a la de inicio.","err");
-    data={titulo,categoria:val("e_cat")||"otros",fecha,hora:val("e_hora"),fechaFin:(fin&&fin!==fecha)?fin:"",horaFin:val("e_horafin"),lugar:val("e_lugar"),precio:val("e_precio"),descripcion:val("e_desc"),enlace:val("e_link")};
+    data={titulo,categoria:val("e_cat")||"otros",fecha,hora:val("e_hora"),fechaFin:(fin&&fin!==fecha)?fin:"",horaFin:val("e_horafin"),lugar:val("e_lugar"),direccion:val("e_dir"),precio:val("e_precio"),descripcion:val("e_desc"),enlace:val("e_link"),lat:null,lng:null};
+    const la=val("e_lat"),ln=val("e_lng");
+    if(la||ln){
+      const lat=Number(la),lng=Number(ln);
+      if(!la||!ln||!isFinite(lat)||!isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180) return setMsg("formMsg","La ubicación del mapa no es válida. Márcala de nuevo.","err");
+      data.lat=lat; data.lng=lng;
+    }
   } else {
     const titulo=val("n_titulo"),texto=val("n_texto");
     if(!titulo) return setMsg("formMsg","Escribe el titular.","err");
@@ -530,10 +682,10 @@ function render(){
   const r=S.route, v=$("view");
   if(v.dataset.route!==r){
     v.dataset.route=r;
-    v.innerHTML=r==="inicio"?viewInicio():r==="calendario"?viewCalendario():r==="noticias"?viewNoticias():r==="asociaciones"?viewAsociaciones():r==="publicar"?viewPublicar():viewCategoria(r.slice(4));
+    v.innerHTML=r==="inicio"?viewInicio():r==="mapa"?viewMapa():r==="calendario"?viewCalendario():r==="noticias"?viewNoticias():r==="asociaciones"?viewAsociaciones():r==="publicar"?viewPublicar():viewCategoria(r.slice(4));
   }
   if(r==="inicio") fillInicio(); else if(r==="calendario") fillCalendario(); else if(r==="noticias") fillNoticias();
-  else if(r==="asociaciones") fillAsociaciones(); else if(r==="publicar") fillPublicar(); else fillCategoria(r.slice(4));
+  else if(r==="mapa") fillMapa(); else if(r==="asociaciones") fillAsociaciones(); else if(r==="publicar") fillPublicar(); else fillCategoria(r.slice(4));
 }
 
 /* ---------- Eventos del usuario ---------- */
@@ -553,6 +705,11 @@ document.addEventListener("click",ev=>{
   if(a==="cancelProfile"){S.editingProfile=false;return render()}
   if(a==="cancelEdit"){S.editId=null;S.formKey="";return render()}
   if(a==="removeImg"){S.img=null;return renderImgField()}
+  if(a==="removeLogo"){S.logo=null;return renderLogoField()}
+  if(a==="geocode") return geocode();
+  if(a==="clearLoc"){S.loc=null;return showLoc(false)}
+  if(t.dataset.mapcat){S.mapCat=t.dataset.mapcat;S.mapFitted=false;return fillMapa()}
+  if(t.dataset.mapfocus){S.focusId=t.dataset.mapfocus;S.mapFitted=true;closeModal();if(S.route==="mapa")fillMapa();return}
   if(t.dataset.mode){S.authMode=t.dataset.mode;S.panelKey="";return render()}
   if(t.dataset.kind){S.kind=t.dataset.kind;S.editId=null;S.pendingDel=null;S.panelKey="";return render()}
   if(t.dataset.day){S.selected=t.dataset.day;const d=parse(S.selected);if(d.getMonth()!==S.month.getMonth())S.month=firstOfMonth(d);return fillCalendario()}
@@ -568,8 +725,12 @@ document.addEventListener("submit",ev=>{
   ev.preventDefault(); if(S.busy) return; const id=ev.target.id;
   if(id==="loginForm")doLogin();else if(id==="signupForm")doSignup();else if(id==="resetForm")doReset();else if(id==="profileForm")saveProfile();else if(id==="pubForm")savePub();
 });
-document.addEventListener("change",ev=>{if(ev.target.id==="f_img")onPickImage(ev.target.files&&ev.target.files[0])});
-document.addEventListener("input",ev=>{if(ev.target.id==="q"){clearTimeout(S.qT);S.qT=setTimeout(()=>{S.q=ev.target.value.trim();fillInicio()},150)}});
+document.addEventListener("change",ev=>{
+  if(ev.target.id==="f_img")onPickImage(ev.target.files&&ev.target.files[0]);
+  if(ev.target.id==="p_logo")onPickLogo(ev.target.files&&ev.target.files[0]);
+  if(ev.target.id==="e_cat"&&S.loc)showLoc(false);
+});
+document.addEventListener("input",ev=>{if(ev.target.id==="q"){S.q=ev.target.value.trim();clearTimeout(S.qT);S.qT=setTimeout(()=>{if(S.route==="inicio")fillInicio()},150)}});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if($("modalRoot").innerHTML)closeModal();else closeNav()}});
 window.addEventListener("hashchange",onRoute);
 

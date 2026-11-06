@@ -125,7 +125,19 @@ h1,h2,h3{text-wrap:balance}
 :root[data-theme="dark"] .cat-label{color:color-mix(in srgb,var(--c) 55%,#fff)}
 .card-ev .t,.card-news .t{font-weight:700;font-size:1.06rem;line-height:1.3}
 .card-ev .meta{font-size:.9rem;color:var(--muted)}
-.card-ev .by{font-size:.85rem;color:var(--muted);margin-top:auto;padding-top:6px}
+.card-ev .by{font-size:.85rem;color:var(--muted);margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:8px;min-width:0}
+.card-ev .by span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ---- Logos ---- */
+.logo{display:inline-grid;place-items:center;flex-shrink:0;border-radius:50%;object-fit:cover;background:var(--river-soft);color:var(--ink);font-family:var(--display);font-weight:800;border:1px solid var(--line);overflow:hidden}
+.logo.xs{width:22px;height:22px;font-size:.62rem}
+.logo.md{width:44px;height:44px;font-size:.95rem}
+.logo.lg{width:64px;height:64px;font-size:1.25rem}
+.logo.ph{background:var(--river);color:var(--river-ink);border-color:transparent}
+.org-head{display:flex;gap:14px;align-items:center;min-width:0}
+.org-head>div{min-width:0}
+.org-row{display:flex;gap:12px;align-items:center}
+.org-row>div{display:flex;flex-direction:column;min-width:0}
+.logo-preview{width:120px!important;height:120px;border-radius:50%!important;object-fit:cover}
 .empty{background:var(--surface);border:1px dashed var(--line);border-radius:18px;padding:28px 22px;text-align:center;color:var(--muted)}
 .empty p{margin:0 0 14px}
 .empty p:last-child{margin:0}
@@ -241,6 +253,70 @@ a.btn{color:var(--river-ink)}
 .mine-item .muted,.admin-row .muted{font-size:.85rem}
 .acts{display:flex;gap:6px;flex-shrink:0}
 
+/* ---- Mapas ---- */
+.map{position:relative;isolation:isolate;height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#dde5e8;margin-bottom:10px}
+.map.small{height:200px;margin:4px 0 12px}
+.map.big{height:min(62vh,540px)}
+.map.map-off{display:grid;place-items:center;text-align:center;padding:16px;color:var(--muted);background:var(--paper)}
+.map-note{font-size:.84rem;color:var(--muted);margin:-4px 0 12px}
+.map-list-title{font-family:var(--display);font-size:1.15rem;margin:18px 0 10px}
+.search-row{display:flex;gap:8px}
+.search-row input{flex:1;min-width:0}
+.search-row .small-btn{white-space:nowrap}
+.loc-row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.hint.err{color:var(--danger)}
+.loc-actions{margin:0 0 16px}
+.pin-wrap{background:transparent;border:0}
+.pin{display:block;width:26px;height:26px;margin:1px;border-radius:50% 50% 50% 0;background:var(--c);transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pop{display:flex;flex-direction:column;gap:4px;min-width:170px;font-family:var(--body)}
+.pop b{font-size:.95rem;line-height:1.25;color:#15222C}
+.pop span{font-size:.82rem;color:#5B6975}
+.pop .small-btn{align-self:flex-start;margin-top:6px;color:#0C5A69;border-color:#D5DEE3}
+/* Leaflet (estilos esenciales) */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;-webkit-tap-highlight-color:transparent;font-family:var(--body);font-size:12px;outline-offset:1px}
+.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{user-select:none;-webkit-user-drag:none}
+.leaflet-container img.leaflet-tile,.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-tile-pane img{max-width:none!important;max-height:none!important;width:auto;padding:0}
+.leaflet-container.leaflet-touch-zoom{touch-action:pan-x pan-y}
+.leaflet-container.leaflet-touch-drag{touch-action:pinch-zoom}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:none}
+.leaflet-tile{filter:inherit;visibility:hidden}
+.leaflet-tile-loaded{visibility:inherit}
+.leaflet-zoom-box{width:0;height:0;box-sizing:border-box;z-index:800}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}
+.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-right .leaflet-control{float:right}
+.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}
+.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}
+.leaflet-fade-anim .leaflet-popup{opacity:0;transition:opacity .2s linear}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{transition:none}
+.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
+.leaflet-interactive{cursor:pointer}
+.leaflet-grab{cursor:grab}
+.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-marker-draggable{cursor:grabbing}
+.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-image-layer,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}
+.leaflet-marker-icon.leaflet-interactive,.leaflet-image-layer.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive{pointer-events:auto}
+.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.35);border-radius:8px}
+.leaflet-bar a{background:#fff;border-bottom:1px solid #ccc;width:32px;height:32px;line-height:32px;display:block;text-align:center;text-decoration:none;color:#15222C!important;font:700 18px/32px system-ui,sans-serif}
+.leaflet-bar a:first-child{border-top-left-radius:8px;border-top-right-radius:8px}
+.leaflet-bar a:last-child{border-bottom-left-radius:8px;border-bottom-right-radius:8px;border-bottom:none}
+.leaflet-bar a.leaflet-disabled{cursor:default;background:#f4f4f4;color:#bbb!important}
+.leaflet-control-attribution{background:rgba(255,255,255,.85);margin:0!important;padding:0 6px;color:#333;font-size:11px;line-height:1.5}
+.leaflet-control-attribution a{color:#0C5A69!important;text-decoration:none}
+.leaflet-control-attribution svg{display:none!important}
+.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}
+.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:14px;background:#fff;color:#15222C;box-shadow:0 3px 14px rgba(0,0,0,.3)}
+.leaflet-popup-content{margin:12px 26px 12px 14px;line-height:1.3;font-size:13px;min-height:1px}
+.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}
+.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;transform:rotate(45deg);background:#fff;box-shadow:0 3px 14px rgba(0,0,0,.3)}
+.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:26px;height:26px;font:18px/26px system-ui,sans-serif;color:#757575!important;text-decoration:none;background:transparent}
+
 /* ---- Instalar ---- */
 .inst-steps{margin:0 0 20px;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
 .ios-tip{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;gap:10px;align-items:center;max-width:520px;margin:0 auto}
@@ -253,12 +329,12 @@ a.btn{color:var(--river-ink)}
 <nav class="nav" id="nav" aria-label="Menú principal">
   <div class="brand"><img src="icon.png" alt=""><div><b>Apoia+</b><span>Miranda de Ebro</span></div><button class="nav-close" data-act="toggleNav" aria-label="Cerrar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
   <a href="#inicio" data-route="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Próximos eventos</span></a>
+  <a href="#asociaciones" data-route="asociaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg><span>Asociaciones</span></a>
+  <a href="#mapa" data-route="mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Mapa de eventos</span></a>
   <a href="#calendario" data-route="calendario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendario</span></a>
   <a href="#noticias" data-route="noticias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>Noticias</span></a>
   <h4>Categorías</h4>
   <div id="navCats"></div>
-  <h4>Ciudad</h4>
-  <a href="#asociaciones" data-route="asociaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg><span>Asociaciones</span></a>
   <a href="#publicar" data-route="publicar" class="publish"><span>Área de asociaciones</span></a>
 </nav>
 <div class="scrim" data-act="closeNav"></div>
@@ -274,6 +350,7 @@ a.btn{color:var(--river-ink)}
 </div>
 <div id="modalRoot"></div>
 <div class="ios-tip" id="iosTip" role="status" hidden><span><b>Instala Apoia+</b> en tu iPhone para tenerla como una app.</span><button class="btn" data-install="1" style="padding:8px 12px">Cómo</button><button class="x" data-tipclose="1" aria-label="Cerrar">×</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous"></script>
 <script src="demo-backend.js"></script>
 <script src="app.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>

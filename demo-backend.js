@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 window.APOIA_DEMO=true;
-const KEY="apoia-demo-v2", SESSION="apoia-demo-session-v2";
+const KEY="apoia-demo-v3", SESSION="apoia-demo-session-v3";
 function pad(n){return String(n).padStart(2,"0")}
 function day(o){const d=new Date();d.setDate(d.getDate()+o);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
 function ago(h){return new Date(Date.now()-h*3600e3).toISOString()}
@@ -13,6 +13,12 @@ function poster(c1,c2,word,bars){
   for(let i=0;i<7;i++){x.beginPath();if(bars)x.rect(60+i*120,140+((i*53)%160),70,440);else x.arc(110+i*125,250+Math.sin(i*1.7)*130,50+i*14,0,7);x.fill()}
   x.globalAlpha=1;x.fillStyle="#fff";x.font="800 86px system-ui, sans-serif";x.fillText(word,50,500);
   return cv.toDataURL("image/jpeg",.78);
+}
+function logoImg(txt,c1,c2){
+  const cv=document.createElement("canvas");cv.width=240;cv.height=240;const x=cv.getContext("2d");
+  x.fillStyle=c1;x.fillRect(0,0,240,240);x.fillStyle=c2;x.beginPath();x.arc(170,70,90,0,7);x.fill();
+  x.fillStyle="#fff";x.font="800 92px system-ui, sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,120,130);
+  return cv.toDataURL("image/jpeg",.85);
 }
 function seed(){
   const A=(nombre,tipo,registro,descripcion,extra)=>Object.assign({nombre,tipo,registro,descripcion,direccion:"",telefono:"",email:"",web:"",estado:"aprobada",creado:ago(900)},extra||{});
@@ -39,14 +45,21 @@ function seed(){
     E("e12","a_corredores","Marcha nórdica","deporte",-5,"","9:30","","Montes Obarenes","Gratis","",null)
   ];
   const eventos={},imagenes={};
-  evs.forEach(([id,d,img])=>{eventos[id]=d;if(img)imagenes[id]={asociacionId:d.asociacionId,data:poster(...img)}});
+  const POS={e01:[42.6879,-2.9452],e02:[42.6849,-2.9489],e03:[42.6838,-2.9441],e04:[42.6868,-2.9525],e05:[42.687,-2.9405],e06:[42.6879,-2.9452],e07:[42.6886,-2.954],e08:[42.6795,-2.9505],e09:[42.6868,-2.9525],e11:[42.6879,-2.9452],e12:[42.705,-3.01]};
+  evs.forEach(([id,d,img])=>{const p=POS[id];d.lat=p?p[0]:null;d.lng=p?p[1]:null;eventos[id]=d;if(img)imagenes[id]={asociacionId:d.asociacionId,data:poster(...img)}});
+  const logos={
+    a_ribera:{asociacionId:"a_ribera",data:logoImg("LR","#7C4DCC","#D9467A")},
+    a_corredores:{asociacionId:"a_corredores",data:logoImg("CE","#2F8A3B","#0E7C86")},
+    a_vecinos:{asociacionId:"a_vecinos",data:logoImg("AV","#D23B2E","#EFAE22")}
+  };
+  ["a_ribera","a_corredores","a_vecinos"].forEach(k=>asociaciones[k].logo="s1");
   const noticias={
     n01:{asociacionId:"a_vecinos",titulo:"Abiertas las inscripciones para el mercadillo solidario",texto:"Si quieres poner un puesto en el mercadillo solidario de este sábado, pásate por el centro cívico antes del jueves. Los puestos son gratuitos y lo recaudado irá íntegro al banco de alimentos.",img:"s1",publicado:ago(5)},
     n02:{asociacionId:"a_corredores",titulo:"Cambio de recorrido en la carrera 10K",texto:"Por obras en la avenida, el tramo final de la carrera pasará por la ribera. La salida y la meta no cambian. Los dorsales se recogen el día anterior de 17:00 a 20:00.",img:"",publicado:ago(30)},
     n03:{asociacionId:"a_ribera",titulo:"Buscamos voluntarios para la programación de invierno",texto:"Necesitamos ayuda con la taquilla, el montaje y la difusión de los conciertos de invierno. Si te apetece colaborar, escríbenos y te contamos.",img:"",publicado:ago(72)}
   };
   imagenes.n01={asociacionId:"a_vecinos",data:poster("#D23B2E","#B7791F","SOLIDARIO")};
-  return {asociaciones,eventos,noticias,imagenes,admins:{a_ribera:{activo:true}},
+  return {asociaciones,eventos,noticias,imagenes,logos,admins:{a_ribera:{activo:true}},
     users:{"demo@apoia.mais":{uid:"a_ribera",pass:"demo123"}}};
 }
 let db;

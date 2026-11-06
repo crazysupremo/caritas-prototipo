@@ -253,6 +253,43 @@ a.btn{color:var(--river-ink)}
 .mine-item .muted,.admin-row .muted{font-size:.85rem}
 .acts{display:flex;gap:6px;flex-shrink:0}
 
+/* ---- Filtros en el menu lateral ---- */
+.nav-filters{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+.nav-sec summary{list-style:none;cursor:pointer;margin:12px 10px 4px;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;opacity:.7;font-weight:600;display:flex;align-items:center;gap:6px}
+.nav-sec summary::-webkit-details-marker{display:none}
+.nav-sec summary::after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);margin-left:auto;margin-right:6px;transition:transform .15s}
+.nav-sec[open] summary::after{transform:rotate(45deg)}
+.nav-f{display:flex;align-items:center;gap:11px;width:100%;padding:8px 10px;border-radius:10px;border:0;background:transparent;color:var(--river-ink);text-align:left;cursor:pointer;font-weight:500}
+.nav-f:hover{background:rgba(255,255,255,.08)}
+.nav-f .lbl{flex:1;min-width:0}
+.nav-f .tick{width:14px;height:14px;border-radius:4px;border:2px solid currentColor;opacity:.7;flex-shrink:0;margin:0 3px}
+.nav-f[aria-pressed="true"]{background:var(--sun);color:var(--sun-ink);font-weight:700}
+.nav-f[aria-pressed="true"] .tick{opacity:1;background:var(--sun-ink);box-shadow:inset 0 0 0 2px var(--sun)}
+.nav-f[aria-pressed="true"] .count{background:rgba(0,0,0,.12)}
+.nav-f .count{font-size:.78rem;background:rgba(255,255,255,.14);border-radius:999px;padding:1px 8px;margin-left:auto}
+.nav-f.zero{opacity:.5}
+.nav-clear{margin:8px 10px 0;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--river-ink);border-radius:10px;padding:7px 10px;font-weight:700;cursor:pointer;text-align:center}
+.nav-more{font-size:.86rem!important;opacity:.8;padding:6px 10px!important}
+.nav-empty{margin:4px 10px;font-size:.86rem;opacity:.7}
+
+/* ---- Filtros ---- */
+.filter-bar{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end;margin:0 0 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px 0}
+.filter-bar .f{margin-bottom:12px}
+.filter-bar select{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+.filter-bar .clear-f{margin-bottom:12px;white-space:nowrap;align-self:end;justify-self:start}
+@media (max-width:420px){.filter-bar{grid-template-columns:1fr 1fr;gap:8px}.filter-bar select{font-size:.9rem}}
+.filter-sum{margin:-8px 0 16px!important}
+.org-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:auto!important}
+.place-group{margin-bottom:18px}
+.place-group h4{font-family:var(--display);font-size:1.05rem;margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.place-group h4 span{font-family:var(--body);font-size:.78rem;font-weight:700;background:var(--river-soft);border-radius:999px;padding:1px 9px}
+.pin-n{position:absolute;top:-8px;right:-10px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#15222C;color:#fff;font:700 11px/20px system-ui,sans-serif;text-align:center;border:2px solid #fff}
+.pop-ev{display:grid;grid-template-columns:10px minmax(0,1fr);column-gap:8px;text-align:left;background:#F2F5F6;border:1px solid #D5DEE3;border-radius:10px;padding:7px 9px;margin-top:6px;cursor:pointer;width:100%;color:#15222C}
+.pop-ev:hover{border-color:#0C5A69}
+.pop-ev i{width:10px;height:10px;border-radius:50%;margin-top:4px;grid-row:span 2}
+.pop-ev span{font-weight:700;font-size:.86rem;line-height:1.25}
+.pop-ev small{color:#5B6975;font-size:.78rem}
+
 /* ---- Mapas ---- */
 .map{position:relative;isolation:isolate;height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#dde5e8;margin-bottom:10px}
 .map.small{height:200px;margin:4px 0 12px}
@@ -333,8 +370,13 @@ a.btn{color:var(--river-ink)}
   <a href="#mapa" data-route="mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Mapa de eventos</span></a>
   <a href="#calendario" data-route="calendario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendario</span></a>
   <a href="#noticias" data-route="noticias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg><span>Noticias</span></a>
-  <h4>Categorías</h4>
-  <div id="navCats"></div>
+  <div class="nav-filters" aria-label="Filtros de la agenda">
+    <button type="button" class="nav-clear" id="navClear" data-act="clearFilters" hidden>Quitar filtros</button>
+    <details class="nav-sec" open><summary>Cuándo</summary><div id="navCuando"></div></details>
+    <details class="nav-sec" open><summary>Categorías</summary><div id="navCats"></div></details>
+    <details class="nav-sec" open><summary>Lugares</summary><div id="navPlaces"></div></details>
+    <details class="nav-sec"><summary>Precio y horario</summary><div id="navPrecio"></div></details>
+  </div>
   <a href="#publicar" data-route="publicar" class="publish"><span>Área de asociaciones</span></a>
 </nav>
 <div class="scrim" data-act="closeNav"></div>

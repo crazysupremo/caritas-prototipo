@@ -29,6 +29,10 @@ const CAT = Object.fromEntries(CATS.map(c=>[c.id,c]));
 const ASSOC_TYPES = ["Cultural","Deportiva","Vecinal","Juvenil","De mayores","Social o solidaria","Educativa","Otra"];
 const PAGES = {inicio:"Agenda", mapa:"Mapa de eventos", calendario:"Calendario", noticias:"Noticias", asociaciones:"Asociaciones", publicar:"Área de asociaciones"};
 const MIRANDA = [42.6858, -2.9466];
+function emptyF(){return {cat:"",asoc:"",lugar:"",cuando:"",precio:"",horario:""}}
+const CUANDO = [{id:"hoy",name:"Hoy"},{id:"finde",name:"Este fin de semana"},{id:"semana",name:"Próximos 7 días"},{id:"mes",name:"Este mes"}];
+const PRECIO = [{id:"gratis",name:"Gratis"},{id:"pago",name:"De pago"}];
+const HORARIO = [{id:"manana",name:"Mañana (antes de 14:00)"},{id:"tarde",name:"Tarde (14:00–20:00)"},{id:"noche",name:"Noche (desde 20:00)"},{id:"dia",name:"Todo el día"}];
 
 /* ---------- Estado ---------- */
 const S = {
@@ -36,7 +40,7 @@ const S = {
   assocs:new Map(), events:[], news:[], ready:{a:false,e:false,n:false},
   route:"inicio", month:firstOfMonth(new Date()), selected:ymd(new Date()), q:"",
   authMode:"login", editingProfile:false, kind:"evento", editId:null, pendingDel:null, busy:false,
-  panelKey:"", formKey:"", img:null, logo:null, loc:null, imgCache:new Map(), mapCat:"todas"
+  panelKey:"", formKey:"", img:null, logo:null, loc:null, imgCache:new Map(), f:emptyF()
 };
 
 /* ---------- Utilidades ---------- */
@@ -61,6 +65,73 @@ function initials(n){return String(n||"?").replace(/^(Asociaci[oó]n|Club|AMPA)\
 function logoHtml(a,cls){
   cls=cls||"logo";
   return a.logo?`<img class="${cls}" alt="Logo de ${esc(a.nombre)}" data-logo="${esc(a.id)}">`:`<span class="${cls} ph" aria-hidden="true">${esc(initials(a.nombre))}</span>`;
+}
+function norm(x){return String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
+/* Lugares conocidos: se agrupan por nombre (sin tildes ni mayúsculas) */
+function places(){
+  const map=new Map();
+  pubEvents().forEach(e=>{
+    const k=norm(e.lugar); if(!k) return;
+    let p=map.get(k); if(!p){p={key:k,name:e.lugar.trim(),coords:null,direccion:"",n:0};map.set(k,p)}
+    if(!p.coords&&coords(e)) p.coords=coords(e);
+    if(!p.direccion&&e.direccion) p.direccion=e.direccion;
+    if((e.fechaFin||e.fecha)>=today()) p.n++;
+  });
+  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));
+}
+/* ¿Cae el evento dentro de un rango de fechas? */
+function overlaps(e,a,b){return e.fecha<=b&&(e.fechaFin||e.fecha)>=a}
+function rangoCuando(id){
+  const t=today(), d=new Date();
+  if(id==="hoy") return [t,t];
+  if(id==="semana") return [t,addDays(t,6)];
+  if(id==="mes") return [t,ymd(new Date(d.getFullYear(),d.getMonth()+1,0))];
+  if(id==="finde"){const dow=d.getDay(); if(dow===0) return [t,t]; const sat=addDays(t,(6-dow+7)%7); return [dow===6?t:sat,addDays(sat,1)]}
+  return null;
+}
+function esGratis(e){const p=norm(e.precio);return !p||/gratis|gratuit|libre|free|^0( ?€)?$/.test(p)}
+function franja(e){if(!e.hora)return "dia";const h=+e.hora.split(":")[0];return h<14?"manana":h<20?"tarde":"noche"}
+function passes(e,f){
+  if(f.cat&&e.categoria!==f.cat) return false;
+  if(f.asoc&&e.asociacionId!==f.asoc) return false;
+  if(f.lugar&&norm(e.lugar)!==f.lugar) return false;
+  if(f.cuando){const r=rangoCuando(f.cuando);if(r&&!overlaps(e,r[0],r[1]))return false}
+  if(f.precio&&(f.precio==="gratis")!==esGratis(e)) return false;
+  if(f.horario&&franja(e)!==f.horario) return false;
+  return true;
+}
+function applyFilters(list){return list.filter(e=>passes(e,S.f))}
+function hasFilters(){return Object.values(S.f).some(Boolean)}
+/* Cuántos eventos habría si cambiara solo este filtro */
+function countWith(k,v){const f=Object.assign({},S.f,{[k]:v});return upcoming().filter(e=>passes(e,f)).length}
+function filterBar(){
+  const assocs=[...S.assocs.values()].filter(a=>a.estado==="aprobada"&&a.nombre).sort((a,b)=>a.nombre.localeCompare(b.nombre,"es"));
+  const opt=(k,v,label)=>{const n=countWith(k,v);return (n||S.f[k]===v)?`<option value="${esc(v)}"${S.f[k]===v?" selected":""}>${esc(label)} (${n})</option>`:""};
+  const sel=(k,id,label,all,items)=>`<div class="f"><label for="${id}">${label}</label><select id="${id}" data-filter="${k}"><option value=""${!S.f[k]?" selected":""}>${all}</option>${items}</select></div>`;
+  return `<div class="filter-bar" role="group" aria-label="Filtros">
+    ${sel("cuando","f_cuando","Cuándo","Cualquier fecha",CUANDO.map(c=>opt("cuando",c.id,c.name)).join(""))}
+    ${sel("cat","f_cat","Categoría","Todas",CATS.map(c=>opt("cat",c.id,c.name)).join(""))}
+    ${sel("lugar","f_lugar","Lugar","Todos",places().map(p=>opt("lugar",p.key,p.name)).join(""))}
+    ${sel("asoc","f_asoc","Asociación","Todas",assocs.map(a=>opt("asoc",a.id,a.nombre)).join(""))}
+    ${sel("precio","f_precio","Precio","Cualquiera",PRECIO.map(c=>opt("precio",c.id,c.name)).join(""))}
+    ${sel("horario","f_horario","Horario","Cualquiera",HORARIO.map(c=>opt("horario",c.id,c.name)).join(""))}
+    ${hasFilters()?`<button class="small-btn clear-f" type="button" data-act="clearFilters">Quitar filtros</button>`:""}
+  </div>`;
+}
+function knownPlaceName(x){const p=places().find(p=>p.key===norm(x));return p?p.name:x}
+/* Al elegir un lugar conocido, copiar su ubicación y dirección */
+function onLugarChange(){
+  const p=places().find(p=>p.key===norm(val("e_lugar"))); if(!p) return;
+  if(p.direccion&&$("e_dir")&&!val("e_dir")) $("e_dir").value=p.direccion;
+  if(p.coords&&!S.loc){setLoc(p.coords[0],p.coords[1],true);showLoc(false,`Ubicación copiada de «${p.name}». Puedes ajustarla en el mapa.`)}
+}
+function setFilter(k,v){S.f[k]=v;S.mapFitted=false;renderNav();if(S.route==="mapa")fillMapa();else fillInicio()}
+/* Filtro desde el menu lateral: activa o quita, y muestra la agenda (o el mapa si ya está abierto) */
+function navFilter(k,v){
+  S.f[k]=S.f[k]===v?"":v; S.mapFitted=false; S.q="";
+  if(S.route==="mapa"){renderNav();fillMapa();closeNav();return}
+  if(S.route==="inicio"){renderNav();fillInicio();closeNav();window.scrollTo(0,0);return}
+  go("inicio");
 }
 function directionsUrl(e){
   const c=coords(e);
@@ -94,7 +165,7 @@ function findItem(id){return S.events.find(x=>x.id===id)||S.news.find(x=>x.id===
 function routeFromHash(){
   const h=(location.hash||"").replace("#","");
   if(PAGES[h]) return h;
-  if(h.startsWith("cat-")&&CAT[h.slice(4)]) return h;
+  if(h.startsWith("cat-")&&CAT[h.slice(4)]){S.f=emptyF();S.f.cat=h.slice(4);try{history.replaceState(null,"","#inicio")}catch(e){}return "inicio"}
   return "inicio";
 }
 function go(r){
@@ -119,9 +190,20 @@ function toggleNav(){
 }
 try{if(localStorage.getItem("apoia-nav")==="cerrado")document.body.classList.add("nav-collapsed")}catch(e){}
 function renderNav(){
+  if(!$("navCats")) return;
+  const item=(k,v,label,dot)=>{
+    const on=S.f[k]===v, n=countWith(k,v);
+    return `<button type="button" class="nav-f${!n&&!on?" zero":""}" data-navf="${k}:${esc(v)}" aria-pressed="${on}">${dot?`<span class="dot" style="background:${dot}"></span>`:`<span class="tick" aria-hidden="true"></span>`}<span class="lbl">${esc(label)}</span><span class="count">${n}</span></button>`;
+  };
+  $("navCuando").innerHTML=CUANDO.map(c=>item("cuando",c.id,c.name)).join("");
   const counts={}; upcoming().forEach(e=>{counts[e.categoria]=(counts[e.categoria]||0)+1});
-  $("navCats").innerHTML=CATS.filter(c=>c.id!=="otros"||counts.otros).map(c=>
-    `<a href="#cat-${c.id}" data-route="cat-${c.id}" aria-current="${S.route==="cat-"+c.id?"page":"false"}"><span class="dot" style="background:${c.color}"></span><span>${esc(c.name)}</span>${counts[c.id]?`<span class="count">${counts[c.id]}</span>`:""}</a>`).join("");
+  $("navCats").innerHTML=CATS.filter(c=>c.id!=="otros"||counts.otros).map(c=>item("cat",c.id,c.name,c.color)).join("");
+  const pl=places().filter(p=>p.n||S.f.lugar===p.key).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,"es"));
+  const top=pl.slice(0,8); if(S.f.lugar&&!top.some(p=>p.key===S.f.lugar)){const x=pl.find(p=>p.key===S.f.lugar);if(x)top.push(x)}
+  $("navPlaces").innerHTML=top.map(p=>item("lugar",p.key,p.name)).join("")+(pl.length>top.length?`<a href="#mapa" class="nav-more">Ver los ${pl.length} lugares en el mapa</a>`:"")||`<p class="nav-empty">Sin lugares todavía</p>`;
+  $("navPrecio").innerHTML=PRECIO.map(c=>item("precio",c.id,c.name)).join("")+HORARIO.map(c=>item("horario",c.id,c.name)).join("");
+  const n=Object.values(S.f).filter(Boolean).length;
+  $("navClear").hidden=!n; $("navClear").textContent=n>1?`Quitar ${n} filtros`:"Quitar filtro";
 }
 
 /* ---------- Tarjetas ---------- */
@@ -171,15 +253,17 @@ function viewInicio(){
       <label class="sr" for="q">Buscar</label>
       <input class="search" id="q" type="search" placeholder="Buscar evento, lugar o asociación" value="${esc(S.q)}">
     </section>
+    <div id="filterBox"></div>
     <div id="results"></div>`;
 }
 function fillInicio(){
   const box=$("results"); if(!box) return;
   if(!loaded()){box.innerHTML=empty("Cargando eventos…");return}
-  const list=search(upcoming()), t=today(), wk=addDays(t,7);
-  if(!list.length){box.innerHTML=S.q?empty("No hay eventos que coincidan con tu búsqueda."):empty("Todavía no hay eventos publicados.",`<a class="btn alt" href="#publicar">Publicar como asociación</a>`);return}
+  if($("filterBox")) $("filterBox").innerHTML=filterBar();
+  const list=applyFilters(search(upcoming())), t=today(), wk=addDays(t,7);
+  if(!list.length){box.innerHTML=(S.q||hasFilters())?empty("No hay eventos que coincidan con la búsqueda o los filtros.",hasFilters()?`<button class="btn alt" type="button" data-act="clearFilters">Quitar filtros</button>`:""):empty("Todavía no hay eventos publicados.",`<a class="btn alt" href="#publicar">Publicar como asociación</a>`);return}
   const groups=[["Hoy",list.filter(e=>onDay(e,t))],["Esta semana",list.filter(e=>!onDay(e,t)&&e.fecha<=wk)],["Más adelante",list.filter(e=>!onDay(e,t)&&e.fecha>wk)]];
-  box.innerHTML=groups.filter(g=>g[1].length).map(([h,l])=>`<section class="group"><h3>${h} <span>${l.length}</span></h3><div class="cards">${l.map(eventCard).join("")}</div></section>`).join("");
+  box.innerHTML=(hasFilters()?`<p class="muted filter-sum">${list.length} evento${list.length>1?"s":""} con estos filtros.</p>`:"")+groups.filter(g=>g[1].length).map(([h,l])=>`<section class="group"><h3>${h} <span>${l.length}</span></h3><div class="cards">${l.map(eventCard).join("")}</div></section>`).join("");
   hydrateImages(box);
 }
 function viewCategoria(id){
@@ -247,7 +331,7 @@ function fillAsociaciones(){
     return `<article class="org"><div class="org-head">${logoHtml(a,"logo lg")}<div><p class="type">Asociación ${esc((a.tipo||"").toLowerCase())}</p><h3>${esc(a.nombre)}</h3></div></div>
       ${a.descripcion?`<p class="desc">${esc(a.descripcion)}</p>`:""}
       <dl class="facts">${a.direccion?`<dt>Dirección</dt><dd>${esc(a.direccion)}</dd>`:""}${a.telefono?`<dt>Teléfono</dt><dd>${esc(a.telefono)}</dd>`:""}${a.email?`<dt>Email</dt><dd>${esc(a.email)}</dd>`:""}${web?`<dt>Web</dt><dd><a href="${esc(web)}" target="_blank" rel="noopener">${esc(a.web)}</a></dd>`:""}</dl>
-      <p>${n?`<span class="badge">${n} evento${n>1?"s":""} próximo${n>1?"s":""}</span>`:`<span class="muted">Sin eventos próximos</span>`}</p></article>`}).join("")}</div>`:empty("Aún no hay asociaciones registradas.");
+      <p class="org-foot">${n?`<span class="badge">${n} evento${n>1?"s":""} próximo${n>1?"s":""}</span><button class="small-btn" type="button" data-showassoc="${esc(a.id)}">Ver sus eventos</button>`:`<span class="muted">Sin eventos próximos</span>`}</p></article>`}).join("")}</div>`:empty("Aún no hay asociaciones registradas.");
   hydrateImages(box);
 }
 
@@ -261,7 +345,7 @@ function openEvent(id){
     <h2 id="mTitle">${esc(e.titulo)}</h2>
     <dl class="facts"><dt>Cuándo</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(e.hora?(e.hora+(e.horaFin?" – "+e.horaFin:"")):"Todo el día")}</dd>${e.lugar?`<dt>Dónde</dt><dd>${esc(e.lugar)}</dd>`:""}<dt>Precio</dt><dd>${esc(e.precio||"Gratis")}</dd>${e.direccion?`<dt>Dirección</dt><dd>${esc(e.direccion)}</dd>`:""}</dl>
     ${coords(e)?`<div class="map small" id="detailMap" aria-label="Mapa del lugar del evento"></div>`:""}
-    ${(coords(e)||e.lugar||e.direccion)?`<div class="actions loc-actions"><a class="btn" id="dirLink" href="${esc(directionsUrl(e))}" target="_blank" rel="noopener">Cómo llegar</a>${coords(e)?`<a class="btn alt" href="#mapa" data-close="1" data-mapfocus="${esc(e.id)}">Ver en el mapa de eventos</a>`:""}</div>`:""}
+    ${(coords(e)||e.lugar||e.direccion)?`<div class="actions loc-actions"><a class="btn" id="dirLink" href="${esc(directionsUrl(e))}" target="_blank" rel="noopener">Cómo llegar</a>${coords(e)?`<a class="btn alt" href="#mapa" data-close="1" data-mapfocus="${esc(e.id)}">Ver en el mapa de eventos</a>`:""}${e.lugar&&upcoming().filter(x=>norm(x.lugar)===norm(e.lugar)).length>1?`<button class="btn alt" type="button" data-showplace="${esc(norm(e.lugar))}">Más eventos en este lugar</button>`:""}</div>`:""}
     ${e.descripcion?`<p class="long">${esc(e.descripcion)}</p>`:""}
     <div class="org-card"><div class="org-row">${logoHtml(o,"logo md")}<div><span class="muted">Organiza</span><b>${esc(o.nombre)}</b></div></div><span>${[o.telefono,o.email].filter(Boolean).map(esc).join(" · ")}</span>${web?`<a href="${esc(web)}" target="_blank" rel="noopener">${esc(o.web)}</a>`:""}</div>
     <div class="actions">
@@ -408,34 +492,47 @@ async function geocode(){
 /* Página «Mapa de eventos» */
 function viewMapa(){
   return `<section class="intro"><h2>Mapa de eventos</h2><p>Dónde son los próximos eventos. Toca un marcador para ver los detalles.</p></section>
-    <div class="filters" id="mapFilters"></div>
+    <div id="filterBox"></div>
     <div class="map big" id="allMap" aria-label="Mapa con los próximos eventos"></div>
     <h3 class="map-list-title" id="mapCount"></h3>
     <div class="rows" id="mapList"></div>`;
 }
 function fillMapa(){
   if(!$("allMap")) return;
-  const all=[{id:"todas",name:"Todas",color:null}].concat(CATS.filter(c=>c.id!=="otros"));
-  $("mapFilters").innerHTML=all.map(c=>`<button class="chip" data-mapcat="${c.id}" aria-pressed="${S.mapCat===c.id}">${c.color?`<span class="dot" style="background:${c.color}"></span>`:""}${esc(c.name)}</button>`).join("");
-  const list=upcoming().filter(e=>coords(e)&&(S.mapCat==="todas"||e.categoria===S.mapCat));
-  const sinLoc=upcoming().filter(e=>!coords(e)).length;
+  $("filterBox").innerHTML=filterBar();
+  const filtered=applyFilters(upcoming());
+  const list=filtered.filter(e=>coords(e));
+  const sinLoc=filtered.length-list.length;
+  /* Agrupar por sitio: mismo lugar o mismas coordenadas = un marcador */
+  const groups=new Map();
+  list.forEach(e=>{
+    const c=coords(e), k=norm(e.lugar)||(c[0].toFixed(4)+","+c[1].toFixed(4));
+    let g=groups.get(k); if(!g){g={key:k,name:e.lugar||"Sin nombre",c,events:[]};groups.set(k,g)}
+    g.events.push(e);
+  });
+  const gl=[...groups.values()].sort((a,b)=>b.events.length-a.events.length||a.name.localeCompare(b.name,"es"));
   let m=maps.allMap;
   if(!m||m.getContainer()!==$("allMap")){m=makeMap("allMap",MIRANDA,14);S.mapLayer=null;S.mapFitted=false}
   if(m){
     if(S.mapLayer) S.mapLayer.clearLayers(); else S.mapLayer=L.layerGroup().addTo(m);
-    list.forEach(e=>{
+    gl.forEach(g=>{
       const box=document.createElement("div"); box.className="pop";
-      const d=parse(e.fecha);
-      box.innerHTML=`<b>${esc(e.titulo)}</b><span>${esc(d.getDate()+" "+fShort.format(d))}${e.hora?" · "+esc(e.hora):""}${e.lugar?" · "+esc(e.lugar):""}</span>`;
-      const btn=document.createElement("button"); btn.className="small-btn"; btn.type="button"; btn.textContent="Ver evento";
-      btn.addEventListener("click",()=>openEvent(e.id)); box.appendChild(btn);
-      L.marker(coords(e),{icon:pinIcon(c2color(e)),title:e.titulo}).bindPopup(box).addTo(S.mapLayer);
+      box.innerHTML=`<b>${esc(g.name)}</b><span>${g.events.length} evento${g.events.length>1?"s":""} aquí</span>`;
+      g.events.forEach(e=>{
+        const d=parse(e.fecha), row=document.createElement("button");
+        row.type="button"; row.className="pop-ev";
+        row.innerHTML=`<i style="background:${c2color(e)}"></i><span>${esc(e.titulo)}</span><small>${esc(d.getDate()+" "+fShort.format(d))}${e.hora?" · "+esc(e.hora):""}</small>`;
+        row.addEventListener("click",()=>openEvent(e.id)); box.appendChild(row);
+      });
+      const icon=g.events.length>1?L.divIcon({className:"pin-wrap",html:`<span class="pin" style="--c:${c2color(g.events[0])}"></span><b class="pin-n">${g.events.length}</b>`,iconSize:[28,28],iconAnchor:[14,30],popupAnchor:[0,-28]}):pinIcon(c2color(g.events[0]));
+      L.marker(g.c,{icon,title:g.name}).bindPopup(box,{maxWidth:280}).addTo(S.mapLayer);
     });
     if(S.focusId){const f=list.find(x=>x.id===S.focusId);if(f){m.setView(coords(f),17);S.mapFitted=true}S.focusId=null}
     if(!S.mapFitted&&list.length){m.fitBounds(L.latLngBounds(list.map(coords)),{padding:[40,40],maxZoom:16});S.mapFitted=true}
   }
-  $("mapCount").textContent=loaded()?(list.length?`${list.length} evento${list.length>1?"s":""} en el mapa`:"No hay eventos con ubicación en esta categoría"):"Cargando…";
-  $("mapList").innerHTML=list.map(eventRow).join("")+(sinLoc&&S.mapCat==="todas"?`<p class="muted">${sinLoc} evento${sinLoc>1?"s":""} sin ubicación en el mapa.</p>`:"");
+  $("mapCount").textContent=loaded()?(list.length?`${list.length} evento${list.length>1?"s":""} en ${gl.length} lugar${gl.length>1?"es":""}`:"No hay eventos con ubicación con estos filtros"):"Cargando…";
+  $("mapList").innerHTML=gl.map(g=>`<section class="place-group"><h4>${esc(g.name)} <span>${g.events.length}</span></h4><div class="rows">${g.events.map(eventRow).join("")}</div></section>`).join("")
+    +(sinLoc?`<p class="muted">${sinLoc} evento${sinLoc>1?"s":""} sin ubicación en el mapa.</p>`:"");
   hydrateImages($("mapList"));
 }
 
@@ -583,7 +680,7 @@ function eventForm(e){
     <div class="row"><div class="f"><label for="e_cat">Categoría</label><select id="e_cat">${CATS.map(c=>`<option value="${c.id}" ${e.categoria===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div class="f"><label for="e_precio">Precio</label><input id="e_precio" maxlength="60" value="${esc(e.precio||"")}" placeholder="Gratis, 10 €…"></div></div>
     <fieldset class="fieldset"><legend>Lugar y ubicación</legend>
-      <div class="f"><label for="e_lugar">Nombre del lugar</label><input id="e_lugar" maxlength="120" value="${esc(e.lugar||"")}" placeholder="Ej.: Casa de Cultura"></div>
+      <div class="f"><label for="e_lugar">Nombre del lugar *</label><input id="e_lugar" maxlength="120" list="lugares" autocomplete="off" value="${esc(e.lugar||"")}" placeholder="Ej.: Casa de Cultura"><datalist id="lugares">${places().map(p=>`<option value="${esc(p.name)}"></option>`).join("")}</datalist><span class="hint">Elige un lugar de la lista si ya existe: así el evento aparece junto a los demás en el filtro y en el mapa.</span></div>
       <div class="f"><label for="e_dir">Dirección</label><div class="search-row"><input id="e_dir" maxlength="150" value="${esc(e.direccion||"")}" placeholder="Ej.: Calle Real Aquende, 10"><button class="small-btn" type="button" data-act="geocode">Buscar en el mapa</button></div></div>
       <div class="map" id="formMap" aria-label="Mapa para marcar el lugar del evento"></div>
       <input type="hidden" id="e_lat" value="${esc(coords(e)?e.lat:"")}"><input type="hidden" id="e_lng" value="${esc(coords(e)?e.lng:"")}">
@@ -636,7 +733,8 @@ async function savePub(){
     if(!titulo) return setMsg("formMsg","Escribe el título del evento.","err");
     if(!fecha) return setMsg("formMsg","Elige la fecha del evento.","err");
     if(fin&&fin<fecha) return setMsg("formMsg","La fecha de fin no puede ser anterior a la de inicio.","err");
-    data={titulo,categoria:val("e_cat")||"otros",fecha,hora:val("e_hora"),fechaFin:(fin&&fin!==fecha)?fin:"",horaFin:val("e_horafin"),lugar:val("e_lugar"),direccion:val("e_dir"),precio:val("e_precio"),descripcion:val("e_desc"),enlace:val("e_link"),lat:null,lng:null};
+    if(!val("e_lugar")){setMsg("formMsg","Escribe el lugar del evento. Sirve para el filtro por lugar y el mapa.","err");$("e_lugar").focus();return}
+    data={titulo,categoria:val("e_cat")||"otros",fecha,hora:val("e_hora"),fechaFin:(fin&&fin!==fecha)?fin:"",horaFin:val("e_horafin"),lugar:knownPlaceName(val("e_lugar")),direccion:val("e_dir"),precio:val("e_precio"),descripcion:val("e_desc"),enlace:val("e_link"),lat:null,lng:null};
     const la=val("e_lat"),ln=val("e_lng");
     if(la||ln){
       const lat=Number(la),lng=Number(ln);
@@ -708,7 +806,10 @@ document.addEventListener("click",ev=>{
   if(a==="removeLogo"){S.logo=null;return renderLogoField()}
   if(a==="geocode") return geocode();
   if(a==="clearLoc"){S.loc=null;return showLoc(false)}
-  if(t.dataset.mapcat){S.mapCat=t.dataset.mapcat;S.mapFitted=false;return fillMapa()}
+  if(a==="clearFilters"){S.f=emptyF();S.mapFitted=false;renderNav();closeNav();return S.route==="mapa"?fillMapa():fillInicio()}
+  if(t.dataset.navf){const i=t.dataset.navf.indexOf(":");return navFilter(t.dataset.navf.slice(0,i),t.dataset.navf.slice(i+1))}
+  if(t.dataset.showassoc){S.f=emptyF();S.f.asoc=t.dataset.showassoc;S.q="";return go("inicio")}
+  if(t.dataset.showplace){S.f=emptyF();S.f.lugar=t.dataset.showplace;S.q="";closeModal();if(S.route==="inicio")return fillInicio();return go("inicio")}
   if(t.dataset.mapfocus){S.focusId=t.dataset.mapfocus;S.mapFitted=true;closeModal();if(S.route==="mapa")fillMapa();return}
   if(t.dataset.mode){S.authMode=t.dataset.mode;S.panelKey="";return render()}
   if(t.dataset.kind){S.kind=t.dataset.kind;S.editId=null;S.pendingDel=null;S.panelKey="";return render()}
@@ -729,6 +830,8 @@ document.addEventListener("change",ev=>{
   if(ev.target.id==="f_img")onPickImage(ev.target.files&&ev.target.files[0]);
   if(ev.target.id==="p_logo")onPickLogo(ev.target.files&&ev.target.files[0]);
   if(ev.target.id==="e_cat"&&S.loc)showLoc(false);
+  if(ev.target.id==="e_lugar")onLugarChange();
+  if(ev.target.dataset&&ev.target.dataset.filter)setFilter(ev.target.dataset.filter,ev.target.value);
 });
 document.addEventListener("input",ev=>{if(ev.target.id==="q"){S.q=ev.target.value.trim();clearTimeout(S.qT);S.qT=setTimeout(()=>{if(S.route==="inicio")fillInicio()},150)}});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if($("modalRoot").innerHTML)closeModal();else closeNav()}});
